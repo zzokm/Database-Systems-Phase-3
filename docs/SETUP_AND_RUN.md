@@ -198,7 +198,7 @@ cd "d:\YOUR\PATH\Phase 3"
 docker compose up --build
 ```
 
-Ports follow `.env` (`BACKEND_EXPOSED_PORT`, `FRONTEND_EXPOSED_PORT`). The backend container still needs **network reachability** to your external SQL Server.
+Ports follow the **`.env`** file Compose reads beside `docker-compose.yml` (`BACKEND_EXPOSED_PORT`, `FRONTEND_EXPOSED_PORT`). **`docker compose` does not read `.env.prod` for `${VAR}` substitution** — copy to `.env` or export the same variables on the host. The backend container still needs **network reachability** to your external SQL Server.
 
 ---
 
@@ -207,6 +207,7 @@ Ports follow `.env` (`BACKEND_EXPOSED_PORT`, `FRONTEND_EXPOSED_PORT`). The backe
 - **`ModuleNotFoundError: app` when running Flask:** always `cd backend` before `python run_dev.py`.
 - **`pyodbc` cannot find driver:** driver name in `.env` must match **ODBC Data Source Administrator (64-bit)** → “Drivers” tab exactly (spaces included).
 - **Frontend cannot reach API:** align `NEXT_PUBLIC_API_BASE_URL` with `BACKEND_EXPOSED_PORT`, and ensure Flask is bound to `0.0.0.0` if calling from another device.
+- **Published port looks wrong (e.g. expect 7865, get 3000):** `$FRONTEND_EXPOSED_PORT` was missing when Compose parsed the file — use a root **`.env`** or set the variable in your host/Dokploy environment.
 
 For architecture context, see `docs/ARCHITECTURE.md`; for per-member checklist status, see `docs/WORK_ALLOCATION.md`; for numbered tasks and deliverables, see `docs/TASK_DETAILS.md`.
 

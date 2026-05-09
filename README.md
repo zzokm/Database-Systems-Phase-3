@@ -21,3 +21,12 @@
 | Flask entry (dev) | `backend/run_dev.py` (`python run_dev.py` from `backend/` after `pip install -r requirements.txt`) |
 | Frontend dev server | `cd frontend && npm install && npm run dev` |
 | Frontend lint | `cd frontend && npm run lint` |
+
+## Docker Compose & hosted URLs
+
+Compose substitutes **`"${FRONTEND_EXPOSED_PORT}:3000"`** from **`.env` next to `docker-compose.yml`**, not from `.env.prod`. If Dokploy only has `.env.prod` on disk, Compose may fall back to **3000:3000**, so **`https://…:7865`** looks dead while the app is on host port **3000**. Either **`cp .env.prod .env`** before `docker compose up`, or inject the variables in Dokploy’s environment.
+
+Ingress / reverse proxies should forward to **container port 3000**.
+
+Rebuild the **frontend** image after changing **`NEXT_PUBLIC_API_BASE_URL`** (value is inlined at build time).
+
