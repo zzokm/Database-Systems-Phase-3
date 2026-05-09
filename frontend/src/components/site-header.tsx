@@ -25,6 +25,7 @@ export function SiteHeader({ active }: { active?: "home" | "crud" | "reports" })
         <nav className="flex items-center gap-2">
           <Link
             href="/"
+            aria-current={active === "home" ? "page" : undefined}
             className={cn(
               buttonVariants({
                 variant: active === "home" ? "default" : "ghost",
@@ -36,6 +37,7 @@ export function SiteHeader({ active }: { active?: "home" | "crud" | "reports" })
           </Link>
           <Link
             href="/crud"
+            aria-current={active === "crud" ? "page" : undefined}
             className={cn(
               buttonVariants({
                 variant: active === "crud" ? "default" : "ghost",
@@ -47,6 +49,7 @@ export function SiteHeader({ active }: { active?: "home" | "crud" | "reports" })
           </Link>
           <Link
             href="/reports"
+            aria-current={active === "reports" ? "page" : undefined}
             className={cn(
               buttonVariants({
                 variant: active === "reports" ? "default" : "ghost",
