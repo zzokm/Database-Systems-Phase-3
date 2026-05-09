@@ -31,5 +31,6 @@ RUN addgroup -S nextjs && adduser -S nextjs -G nextjs \
 USER nextjs
 
 EXPOSE 3000
-CMD ["npm", "run", "start", "--", "-p", "3000"]
+# Listen on all interfaces (required for Docker / reverse proxies)
+CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "--port", "3000"]
 
