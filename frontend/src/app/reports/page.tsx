@@ -15,18 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { getPublicApiBaseUrl } from "@/lib/api-base";
 
 const FETCH_TIMEOUT_MS = 30_000;
 
-function requireApiBaseUrl() {
-  const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!raw) {
-    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL (must be set in root .env)");
-  }
-  return raw.replace(/\/+$/, "");
-}
-
-const API_BASE = requireApiBaseUrl();
+const API_BASE = getPublicApiBaseUrl();
 
 type Row = Record<string, unknown>;
 
