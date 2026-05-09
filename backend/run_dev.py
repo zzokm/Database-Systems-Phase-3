@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from app.main import create_app
+from app.main import app
 
 
 def main() -> None:
-    app = create_app()
     cfg = app.config["APP_CONFIG"]
     app.run(host="0.0.0.0", port=cfg.backend_port, debug=cfg.flask_debug)
 
