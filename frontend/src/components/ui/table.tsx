@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -44,7 +42,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
     <tfoot
       data-slot="table-footer"
       className={cn(
-        "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
+        "border-t bg-muted/50 font-medium [&>tr:last-child]:border-b-0",
         className
       )}
       {...props}
