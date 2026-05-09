@@ -363,7 +363,7 @@ export default function CrudPage() {
           </TabsContent>
         </Tabs>
 
-        {(result || error) && (
+        {(!!result || !!error) && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Response</CardTitle>
