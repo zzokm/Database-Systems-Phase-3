@@ -10,39 +10,64 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
-  "http://localhost:5000";
+const FETCH_TIMEOUT_MS = 30_000;
+
+function requireApiBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (!raw) {
+    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL (must be set in root .env)");
+  }
+  return raw.replace(/\/+$/, "");
+}
+
+const API_BASE = requireApiBaseUrl();
+
+async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function httpError(status: number, data: unknown) {
+  const err = new Error(`HTTP ${status}`);
+  (err as any).status = status;
+  (err as any).data = data;
+  return err;
+}
 
 async function postJson(path: string, body: unknown) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${API_BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const text = await res.text();
   const data = text ? safeJson(text) : null;
-  if (!res.ok) throw { status: res.status, data };
+  if (!res.ok) throw httpError(res.status, data);
   return data;
 }
 
 async function putJson(path: string, body: unknown) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetchWithTimeout(`${API_BASE}${path}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   const text = await res.text();
   const data = text ? safeJson(text) : null;
-  if (!res.ok) throw { status: res.status, data };
+  if (!res.ok) throw httpError(res.status, data);
   return data;
 }
 
 async function del(path: string) {
-  const res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
+  const res = await fetchWithTimeout(`${API_BASE}${path}`, { method: "DELETE" });
   const text = await res.text();
   const data = text ? safeJson(text) : null;
-  if (!res.ok) throw { status: res.status, data };
+  if (!res.ok) throw httpError(res.status, data);
   return data;
 }
 
@@ -61,6 +86,14 @@ function JsonBox({ value }: { value: unknown }) {
       {JSON.stringify(value, null, 2)}
     </pre>
   );
+}
+
+function parseNumber(value: FormDataEntryValue | null, fieldName: string) {
+  const n = Number(value);
+  if (Number.isNaN(n)) {
+    throw new Error(`Invalid number for ${fieldName}`);
+  }
+  return n;
 }
 
 export default function CrudPage() {
@@ -123,10 +156,10 @@ export default function CrudPage() {
                       const fd = new FormData(e.currentTarget);
                       run(() =>
                         postJson("/api/harvest-batches", {
-                          farm_id: Number(fd.get("farm_id")),
-                          crop_type_id: Number(fd.get("crop_type_id")),
+                          farm_id: parseNumber(fd.get("farm_id"), "farm_id"),
+                          crop_type_id: parseNumber(fd.get("crop_type_id"), "crop_type_id"),
                           harvest_date: String(fd.get("harvest_date")),
-                          quantity: Number(fd.get("quantity")),
+                          quantity: parseNumber(fd.get("quantity"), "quantity"),
                         })
                       );
                     }}
