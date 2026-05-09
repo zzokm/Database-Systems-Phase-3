@@ -77,16 +77,17 @@ async function getReport(name: string) {
   const text = await res.text();
   const data = text ? safeJson(text) : null;
   if (!res.ok) {
-    const err = new Error(`HTTP ${res.status}`);
-    (err as any).status = res.status;
-    (err as any).data = data;
+    const err = Object.assign(new Error(`HTTP ${res.status}`), {
+      status: res.status,
+      data,
+    }) as Error & { status: number; data: unknown };
     throw err;
   }
   // Convention: backend may return `{ rows: [...] }` or an array.
   const rows = Array.isArray(data)
     ? data
-    : Array.isArray((data as any)?.rows)
-      ? ((data as any).rows as Row[])
+    : Array.isArray((data as { rows?: unknown } | null)?.rows)
+      ? (((data as { rows?: unknown }).rows as unknown[]) as Row[])
       : [];
   return { data, rows };
 }

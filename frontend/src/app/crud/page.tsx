@@ -34,9 +34,10 @@ async function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
 
 function httpError(status: number, data: unknown) {
   const err = new Error(`HTTP ${status}`);
-  (err as any).status = status;
-  (err as any).data = data;
-  return err;
+  return Object.assign(err, { status, data }) as Error & {
+    status: number;
+    data: unknown;
+  };
 }
 
 async function postJson(path: string, body: unknown) {
