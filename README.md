@@ -10,7 +10,8 @@
 
 - [`docs/SETUP_AND_RUN.md`](docs/SETUP_AND_RUN.md) — install Node/npm, Python, ODBC driver, `.env`, run servers, Compose.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — runtime layout and env vars.
-- [`docs/WORK_ALLOCATION.md`](docs/WORK_ALLOCATION.md) — milestones + member ownership checklists.
+- [`docs/WORK_ALLOCATION.md`](docs/WORK_ALLOCATION.md) — per-member checklist (status only).
+- [`docs/TASK_DETAILS.md`](docs/TASK_DETAILS.md) — numbered tasks (M1-1 … M6-5), deliverables, file map, repo ASCII tree.
 
 ## Quick pointers
 
