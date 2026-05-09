@@ -208,7 +208,7 @@ Ports follow `.env` (`BACKEND_EXPOSED_PORT`, `FRONTEND_EXPOSED_PORT`). The backe
 - **`pyodbc` cannot find driver:** driver name in `.env` must match **ODBC Data Source Administrator (64-bit)** → “Drivers” tab exactly (spaces included).
 - **Frontend cannot reach API:** align `NEXT_PUBLIC_API_BASE_URL` with `BACKEND_EXPOSED_PORT`, and ensure Flask is bound to `0.0.0.0` if calling from another device.
 
-For architecture context, see `docs/ARCHITECTURE.md`; for milestones, see `docs/WORK_ALLOCATION.md`.
+For architecture context, see `docs/ARCHITECTURE.md`; for per-member checklist status, see `docs/WORK_ALLOCATION.md`; for numbered tasks and deliverables, see `docs/TASK_DETAILS.md`.
 
 ---
 

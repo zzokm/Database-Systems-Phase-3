@@ -54,7 +54,7 @@ See `.env.example` for a ready template.
 ## 4. Repository Layout
 
 ```text
-docs/                  WORK_ALLOCATION, SETUP_AND_RUN, ARCHITECTURE
+docs/                  WORK_ALLOCATION, TASK_DETAILS, SETUP_AND_RUN, ARCHITECTURE
 db/schema.sql          DDL + (eventually) seed data
 backend/               Flask package (`app/`), Dockerfile
 frontend/              Next.js app + Dockerfile
@@ -63,7 +63,7 @@ docker-compose.yml     dev composition (no DB container)
 
 ## 5. Ownership Snapshot
 
-Detailed checklists live in **`docs/WORK_ALLOCATION.md`**. At a high level:
+Per-member checklists: **`docs/WORK_ALLOCATION.md`**. Task narratives + file touch map: **`docs/TASK_DETAILS.md`**. At a high level:
 
 - **Member 6 (this repo bootstrap):** backend foundation, frontend shell, Docker wiring.
 - **Members 2–5:** replace API stubs with real SQL (CRUD, lookups, six analytical reports), mock data, documentation PDF assembly.

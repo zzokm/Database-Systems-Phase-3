@@ -39,7 +39,7 @@ def json_not_implemented(
                 "assigned_hint": assigned_hint,
                 "message": (
                     "Route is registered but SQL/business logic is not implemented yet. "
-                    "See WORK_ALLOCATION.md for ownership."
+                    "See docs/WORK_ALLOCATION.md and docs/TASK_DETAILS.md for ownership and deliverables."
                 ),
             }
         ),
