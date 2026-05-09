@@ -16,9 +16,17 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, "") ||
-  "http://localhost:5000";
+const FETCH_TIMEOUT_MS = 30_000;
+
+function requireApiBaseUrl() {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (!raw) {
+    throw new Error("Missing NEXT_PUBLIC_API_BASE_URL (must be set in root .env)");
+  }
+  return raw.replace(/\/+$/, "");
+}
+
+const API_BASE = requireApiBaseUrl();
 
 type Row = Record<string, unknown>;
 
@@ -56,12 +64,30 @@ function safeJson(text: string) {
 }
 
 async function getReport(name: string) {
-  const res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(name)}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/api/reports/${encodeURIComponent(name)}`, {
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
   const text = await res.text();
   const data = text ? safeJson(text) : null;
-  if (!res.ok) throw { status: res.status, data };
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`);
+    (err as any).status = res.status;
+    (err as any).data = data;
+    throw err;
+  }
   // Convention: backend may return `{ rows: [...] }` or an array.
-  const rows = Array.isArray(data) ? data : (data?.rows as Row[] | undefined) ?? [];
+  const rows = Array.isArray(data)
+    ? data
+    : Array.isArray((data as any)?.rows)
+      ? ((data as any).rows as Row[])
+      : [];
   return { data, rows };
 }
 
