@@ -11,6 +11,13 @@ def _require(name: str) -> str:
     return value
 
 
+def _env_bool(name: str, *, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or raw == "":
+        return default
+    return raw.lower() in ("1", "true", "yes", "on")
+
+
 @dataclass(frozen=True)
 class AppConfig:
     # Server
@@ -25,6 +32,8 @@ class AppConfig:
     db_user: str
     db_password: str
     db_driver: str
+    mssql_encrypt: bool
+    mssql_trust_server_certificate: bool
 
     @staticmethod
     def from_env() -> "AppConfig":
@@ -44,5 +53,9 @@ class AppConfig:
             db_user=_require("DB_USER"),
             db_password=_require("DB_PASSWORD"),
             db_driver=_require("DB_DRIVER"),
+            mssql_encrypt=_env_bool("MSSQL_ENCRYPT", default=True),
+            mssql_trust_server_certificate=_env_bool(
+                "MSSQL_TRUST_SERVER_CERTIFICATE", default=True
+            ),
         )
 

@@ -1,64 +1,69 @@
 # ARCHITECTURE
 
 ## 1. Summary
-This repository contains a simple web application for the "Regional Farm-to-Table Distribution" project.
 
-- **Backend**: Python (Flask) REST API
-- **Frontend**: Vanilla HTML/CSS/JavaScript
-- **Database**: **MS SQL Server (externally hosted)** — not created inside Docker Compose
-- **Data access rule**: **Raw SQL only** (no ORM)
+This repository hosts the web stack for the **Regional Farm-to-Table Distribution** Phase 3 project.
+
+- **Backend:** Python (**Flask**) REST API executing **parameterized raw SQL** via **`pyodbc`** — **no ORM**.
+- **Frontend:** **Next.js** (App Router), **React**, **TypeScript**, **Tailwind CSS**, UI primitives aligned with **shadcn/ui** conventions (`frontend/components.json`, `frontend/src/components/ui`).
+- **Database:** **MS SQL Server** hosted **externally** — **not** defined as a Compose service.
 
 ## 2. Runtime Components
 
-### 2.1 Backend service (`backend/`)
-- Flask app exposes endpoints for:
-  - CRUD operations (INSERT/UPDATE/DELETE) required by the course
-  - Reporting endpoints for the 6 analytical inquiries (JOIN queries)
-  - Lookup/list endpoints for dropdowns (farms, restaurants, drivers, crop types, ...)
-- Connects to **external** MS SQL Server using `pyodbc` and parameterized queries.
+### 2.1 Backend (`backend/`)
 
-### 2.2 Frontend service (`frontend/`)
-- Static site (HTML/CSS/JS).
-- Uses `fetch()` to call the Flask API.
-- Pages:
-  - CRUD forms page(s)
-  - Reporting dashboard page(s) for the 6 inquiries
+Flask exposes:
 
-## 3. Docker & Deployment Approach
+- **`GET /health`** — liveness (no database).
+- **`GET /ready`** — lightweight `SELECT 1` probe (requires DB reachable).
+- **`GET /api/meta/routes`** — manifest of registered URLs (useful while CRUD/report handlers are still stubs).
+- **`/api/...` CRUD, lookups, and `/api/reports/<slug>` routes** — registered with **HTTP 501** placeholders until Members 2–5 attach SQL.
 
-### 3.1 Docker Compose
-Docker Compose is used to run **only the application services** (backend + frontend).
+WSGI entry for containers: `gunicorn --factory app.main:create_app`.
 
-- MS SQL Server is **not** a compose service.
-- The backend receives DB connection details via environment variables.
+### 2.2 Frontend (`frontend/`)
 
-### 3.2 Environment variables (backend)
-The backend reads DB configuration from environment variables (example in `backend/.env.example`):
+Single Next.js app calling the REST API using `NEXT_PUBLIC_API_BASE_URL`.
 
-- `DB_HOST`
-- `DB_PORT` (usually `1433`)
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_DRIVER` (example: `ODBC Driver 18 for SQL Server`)
+Notable routes (App Router):
 
-### 3.3 Ports (default)
-- Frontend: `8080` (container) → `8080` (host)
-- Backend API: `5000` (container) → `5000` (host)
+- **`/crud`** — forms for INSERT/UPDATE/DELETE flows (wire-up pending finalized APIs).
+- **`/reports`** — dashboard shell for the six inquiries (data wiring pending).
 
-## 4. Repository Layout (high-level)
+### 2.3 Docker Compose
+
+`docker-compose.yml` builds/runs **backend + frontend** only.
+
+- Image ports default map host `5000` → Flask and host `3000` → Next.js listening on container port `3000`.
+- SQL connectivity still depends on **reachable external** `DB_HOST`.
+
+## 3. Configuration
+
+Root **`.env`** feeds both services when using Compose. Key variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `BACKEND_PORT` / `BACKEND_EXPOSED_PORT` | Flask listen + published port |
+| `FRONTEND_EXPOSED_PORT` | Published Next.js port (maps to internal `3000`) |
+| `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_DRIVER` | SQL auth + ODBC driver name |
+| `MSSQL_ENCRYPT`, `MSSQL_TRUST_SERVER_CERTIFICATE` | ODBC boolean flags (`true`/`false`) |
+| `NEXT_PUBLIC_API_BASE_URL` | Browser-visible API base URL |
+
+See `.env.example` for a ready template.
+
+## 4. Repository Layout
 
 ```text
-docs/                  project docs (Phase 3 + architecture)
-db/                    SQL schema script (schema.sql)
-backend/               Flask API skeleton + dependencies + Dockerfile
-frontend/              static UI skeleton + Dockerfile
-docker-compose.yml     local/dev orchestration (no DB service)
+docs/                  WORK_ALLOCATION, SETUP_AND_RUN, ARCHITECTURE
+db/schema.sql          DDL + (eventually) seed data
+backend/               Flask package (`app/`), Dockerfile
+frontend/              Next.js app + Dockerfile
+docker-compose.yml     dev composition (no DB container)
 ```
 
-## 5. Ownership Mapping (team)
-- **Member 6**: repo setup, project skeleton, Docker, frontend, backend foundation
-- **Members 2–4**: API endpoints + raw SQL (CRUD + inquiries) built on top of the foundation
-- **Member 1**: physical design + DDL direction
-- **Member 5**: documentation PDF + mock data inserts + lookup endpoints
+## 5. Ownership Snapshot
 
+Detailed checklists live in **`docs/WORK_ALLOCATION.md`**. At a high level:
+
+- **Member 6 (this repo bootstrap):** backend foundation, frontend shell, Docker wiring.
+- **Members 2–5:** replace API stubs with real SQL (CRUD, lookups, six analytical reports), mock data, documentation PDF assembly.
