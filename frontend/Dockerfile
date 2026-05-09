@@ -12,11 +12,20 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOME=/home/nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
+
+# Run as non-root
+RUN addgroup -S nextjs && adduser -S nextjs -G nextjs \
+  && chown -R nextjs:nextjs /app \
+  && mkdir -p /home/nextjs \
+  && chown -R nextjs:nextjs /home/nextjs
+
+USER nextjs
 
 EXPOSE 3000
 CMD ["npm", "run", "start", "--", "-p", "3000"]
