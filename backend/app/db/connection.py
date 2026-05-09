@@ -9,9 +9,11 @@ from app.config import AppConfig
 def build_connection_string(cfg: AppConfig) -> str:
     # TrustServerCertificate is commonly needed in dev; keep behavior explicit via connection string.
     # If your hosted MSSQL requires encryption/CA validation, adjust accordingly.
+    enc = "yes" if cfg.mssql_encrypt else "no"
+    trust = "yes" if cfg.mssql_trust_server_certificate else "no"
     return (
         "DRIVER={%s};SERVER=%s,%d;DATABASE=%s;UID=%s;PWD=%s;"
-        "Encrypt=yes;TrustServerCertificate=yes;"
+        "Encrypt=%s;TrustServerCertificate=%s;"
     ) % (
         cfg.db_driver,
         cfg.db_host,
@@ -19,6 +21,8 @@ def build_connection_string(cfg: AppConfig) -> str:
         cfg.db_name,
         cfg.db_user,
         cfg.db_password,
+        enc,
+        trust,
     )
 
 

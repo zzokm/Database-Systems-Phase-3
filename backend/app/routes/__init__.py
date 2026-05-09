@@ -2,15 +2,10 @@ from __future__ import annotations
 
 from flask import Flask
 
+from app.routes.api_placeholder import bp as api_placeholder_bp
 from app.routes.health import bp as health_bp
 
 
 def register_routes(app: Flask) -> None:
-    # Health
     app.register_blueprint(health_bp)
-
-    # Future:
-    # - farms/restaurants/drivers CRUD/list routes
-    # - reports routes (6 inquiries)
-
-
+    app.register_blueprint(api_placeholder_bp)

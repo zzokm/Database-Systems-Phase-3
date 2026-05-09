@@ -2,22 +2,174 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Frontend: Dev (Next.js)",
+      "label": "Frontend: Setup (npm install)",
+      "detail": "Install Node dependencies under frontend/",
       "type": "shell",
-      "command": "npm",
-      "args": ["run", "dev", "--", "--port", "3000"],
+      "command": "npm install",
       "options": {
         "cwd": "${workspaceFolder}/frontend"
       },
       "problemMatcher": [],
-      "isBackground": true,
       "presentation": {
         "reveal": "always",
-        "panel": "dedicated",
-        "clear": false
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: Setup (venv + requirements)",
+      "detail": "Create backend/.venv if missing, then pip install requirements.txt",
+      "type": "shell",
+      "windows": {
+        "options": {
+          "cwd": "${workspaceFolder}/backend",
+          "shell": {
+            "executable": "powershell.exe",
+            "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
+          }
+        },
+        "command": "if (!(Test-Path .venv)) { python -m venv .venv }; .\\.venv\\Scripts\\python.exe -m pip install -U pip; .\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt"
+      },
+      "linux": {
+        "options": { "cwd": "${workspaceFolder}/backend" },
+        "command": "test -d .venv || python3 -m venv .venv && .venv/bin/python -m pip install -U pip && .venv/bin/python -m pip install -r requirements.txt"
+      },
+      "osx": {
+        "options": { "cwd": "${workspaceFolder}/backend" },
+        "command": "test -d .venv || python3 -m venv .venv && .venv/bin/python -m pip install -U pip && .venv/bin/python -m pip install -r requirements.txt"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Frontend: Lint (eslint)",
+      "detail": "Run eslint once (non-watch)",
+      "type": "shell",
+      "command": "npm run lint",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: Run dev (Flask)",
+      "detail": "python run_dev.py using backend/.venv (reads root .env via create_app)",
+      "type": "process",
+      "command": "${workspaceFolder}/backend/.venv/bin/python",
+      "args": ["run_dev.py"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "windows": {
+        "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+        "args": ["run_dev.py"],
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
       },
       "group": "build"
+    },
+    {
+      "label": "Frontend: Run dev (Next.js)",
+      "detail": "next dev on port 3000",
+      "type": "shell",
+      "command": "npm run dev -- --port 3000",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "group": "build"
+    },
+    {
+      "label": "Full stack: Run dev",
+      "detail": "Start Flask + Next.js in parallel (two terminals/panels)",
+      "dependsOrder": "parallel",
+      "dependsOn": ["Backend: Run dev (Flask)", "Frontend: Run dev (Next.js)"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Full stack: Setup",
+      "detail": "Backend venv + pip and Frontend npm install in parallel",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "Backend: Setup (venv + requirements)",
+        "Frontend: Setup (npm install)"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: Setup + Test SQL connection",
+      "detail": "Backend venv/pip then verify DB with root .env",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Backend: Setup (venv + requirements)",
+        "Backend: Test SQL connection"
+      ],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Frontend: Setup + lint",
+      "detail": "npm install then eslint",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Frontend: Setup (npm install)", "Frontend: Lint (eslint)"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Backend: Test SQL connection",
+      "detail": "Uses root .env (BACKEND_PORT, DB_*, ODBC driver name); ODBC Driver must be installed",
+      "type": "process",
+      "command": "${workspaceFolder}/backend/.venv/bin/python",
+      "args": ["${workspaceFolder}/.vscode/scripts/test_sql_connection.py"],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "windows": {
+        "command": "${workspaceFolder}/backend/.venv/Scripts/python.exe",
+        "args": ["${workspaceFolder}/.vscode/scripts/test_sql_connection.py"],
+        "options": {
+          "cwd": "${workspaceFolder}/backend"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "focus": true,
+        "showReuseMessage": false
+      }
     }
   ]
 }
-
