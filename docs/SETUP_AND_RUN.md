@@ -209,3 +209,20 @@ Ports follow `.env` (`BACKEND_EXPOSED_PORT`, `FRONTEND_EXPOSED_PORT`). The backe
 - **Frontend cannot reach API:** align `NEXT_PUBLIC_API_BASE_URL` with `BACKEND_EXPOSED_PORT`, and ensure Flask is bound to `0.0.0.0` if calling from another device.
 
 For architecture context, see `docs/ARCHITECTURE.md`; for milestones, see `docs/WORK_ALLOCATION.md`.
+
+---
+
+## 12. VS Code tasks (optional)
+
+If you open the repo folder in VS Code, use **Terminal → Run Task…** (`Ctrl+Shift+B` selects the configured build/default group where applicable):
+
+| Task | What it does |
+|------|----------------|
+| **Frontend: Setup (npm install)** | Installs frontend dependencies |
+| **Backend: Setup (venv + requirements)** | Creates `backend/.venv` if missing, then `pip install -r backend/requirements.txt` |
+| **Full stack: Setup** | Runs both setup tasks **in parallel** |
+| **Backend: Run dev (Flask)** | `backend/run_dev.py` using the venv |
+| **Frontend: Run dev (Next.js)** | `npm run dev` on port **3000** |
+| **Full stack: Run dev** | Starts backend + frontend **in parallel** (long-running) |
+| **Backend: Test SQL connection** | Runs `.vscode/scripts/test_sql_connection.py` (needs root `.env` + ODBC Driver) |
+| **Backend: Setup + Test SQL connection** | Sequential: setup then SQL probe |
