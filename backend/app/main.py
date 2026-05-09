@@ -55,3 +55,7 @@ def create_app() -> Flask:
 
     return app
 
+
+# WSGI entry for Gunicorn (`app.main:app`). Avoids `--factory`, which older Gunicorn builds reject.
+app = create_app()
+

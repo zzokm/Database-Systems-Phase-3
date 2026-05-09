@@ -14,4 +14,4 @@ COPY app ./app
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${BACKEND_PORT} --factory app.main:create_app"]
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${BACKEND_PORT} app.main:app"]
