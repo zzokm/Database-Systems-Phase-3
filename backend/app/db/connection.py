@@ -1,12 +1,77 @@
-"""
-This module will contain the database connection and query execution helpers.
+from __future__ import annotations
 
-It will:
-- Build a connection string for the **externally hosted** MS SQL Server using env vars.
-- Create/manage a `pyodbc` connection (and cursor usage pattern).
-- Expose small helper functions for executing raw SQL safely (parameterized queries).
-- Provide a consistent way to return rows (e.g., list of dicts) for JSON responses.
+from collections.abc import Iterable, Sequence
+from typing import Any
 
-Important constraint: **no ORM**. All data access must be raw SQL.
-"""
+from app.config import AppConfig
+
+
+def build_connection_string(cfg: AppConfig) -> str:
+    # TrustServerCertificate is commonly needed in dev; keep behavior explicit via connection string.
+    # If your hosted MSSQL requires encryption/CA validation, adjust accordingly.
+    return (
+        "DRIVER={%s};SERVER=%s,%d;DATABASE=%s;UID=%s;PWD=%s;"
+        "Encrypt=yes;TrustServerCertificate=yes;"
+    ) % (
+        cfg.db_driver,
+        cfg.db_host,
+        cfg.db_port,
+        cfg.db_name,
+        cfg.db_user,
+        cfg.db_password,
+    )
+
+
+def get_connection(cfg: AppConfig):
+    import pyodbc  # local import so the app can start even if driver isn't installed yet
+
+    conn_str = build_connection_string(cfg)
+    # autocommit off: endpoints can commit explicitly for write operations
+    return pyodbc.connect(conn_str, autocommit=False, timeout=10)
+
+
+def rows_to_dicts(cursor, rows: Sequence[Sequence[Any]]) -> list[dict[str, Any]]:
+    cols = [c[0] for c in cursor.description] if cursor.description else []
+    return [dict(zip(cols, r)) for r in rows]
+
+
+def execute_select(
+    cfg: AppConfig,
+    sql: str,
+    params: Sequence[Any] | None = None,
+) -> list[dict[str, Any]]:
+    with get_connection(cfg) as conn:
+        cur = conn.cursor()
+        cur.execute(sql, params or [])
+        rows = cur.fetchall()
+        return rows_to_dicts(cur, rows)
+
+
+def execute_write(
+    cfg: AppConfig,
+    sql: str,
+    params: Sequence[Any] | None = None,
+) -> dict[str, Any]:
+    """
+    Executes INSERT/UPDATE/DELETE. Returns `{ rows_affected: int }`.
+    """
+    with get_connection(cfg) as conn:
+        cur = conn.cursor()
+        cur.execute(sql, params or [])
+        rows_affected = cur.rowcount
+        conn.commit()
+        return {"rows_affected": rows_affected}
+
+
+def execute_many(
+    cfg: AppConfig,
+    sql: str,
+    params_seq: Iterable[Sequence[Any]],
+) -> dict[str, Any]:
+    with get_connection(cfg) as conn:
+        cur = conn.cursor()
+        cur.executemany(sql, list(params_seq))
+        rows_affected = cur.rowcount
+        conn.commit()
+        return {"rows_affected": rows_affected}
 
