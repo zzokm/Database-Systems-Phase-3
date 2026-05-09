@@ -1,9 +1,21 @@
-"""
-Healthcheck and readiness endpoints will live here.
+from __future__ import annotations
 
-This will include:
-- A simple `GET /health` route to confirm the API is running.
-- Optionally, a `GET /ready` route that attempts a lightweight DB query
-  (against the external MS SQL Server) to confirm connectivity.
-"""
+from flask import Blueprint, current_app, jsonify
+
+from app.db.connection import execute_select
+
+bp = Blueprint("health", __name__)
+
+
+@bp.get("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
+@bp.get("/ready")
+def ready():
+    cfg = current_app.config["APP_CONFIG"]
+    # lightweight DB check
+    rows = execute_select(cfg, "SELECT 1 AS ok")
+    return jsonify({"status": "ok", "db": rows[0] if rows else {"ok": 1}})
 
