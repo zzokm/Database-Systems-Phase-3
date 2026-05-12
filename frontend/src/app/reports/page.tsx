@@ -1,11 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ChevronDown, Loader2 } from "lucide-react";
 
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -16,6 +23,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
 
@@ -188,6 +197,67 @@ function formatCell(v: unknown) {
   return String(v);
 }
 
+function columnKeys(rows: Row[]): string[] {
+  if (!rows?.length) return [];
+  const keys = new Set<string>();
+  rows.forEach((r) => Object.keys(r || {}).forEach((k) => keys.add(k)));
+  return Array.from(keys).sort();
+}
+
+function toSortableNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function compareCell(a: unknown, b: unknown): number {
+  const an = toSortableNumber(a);
+  const bn = toSortableNumber(b);
+  if (an !== null && bn !== null && an !== bn) return an < bn ? -1 : 1;
+  if (an !== null && bn === null) return -1;
+  if (an === null && bn !== null) return 1;
+  return formatCell(a).localeCompare(formatCell(b), undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+type SliceMode = "all" | "top" | "bottom";
+
+const SLICE_MODE_LABEL: Record<SliceMode, string> = {
+  all: "All",
+  top: "Top N",
+  bottom: "Bottom N",
+};
+
+function applyTableView(
+  rows: Row[],
+  opts: {
+    sortKey: string;
+    sortDir: "asc" | "desc";
+    sliceMode: SliceMode;
+    sliceN: number;
+  }
+): Row[] {
+  const out = rows.map((r) => ({ ...r }));
+  const keys = columnKeys(out);
+  const key = opts.sortKey && keys.includes(opts.sortKey) ? opts.sortKey : keys[0];
+  if (key) {
+    out.sort((a, b) => {
+      const c = compareCell(a[key], b[key]);
+      return opts.sortDir === "asc" ? c : -c;
+    });
+  }
+  const n = Math.max(1, Math.floor(opts.sliceN));
+  const cap = Math.min(n, out.length);
+  if (opts.sliceMode === "top") return out.slice(0, cap);
+  if (opts.sliceMode === "bottom") return out.slice(Math.max(0, out.length - cap));
+  return out;
+}
+
 export default function ReportsPage() {
   const [rows, setRows] = React.useState<Row[]>([]);
   const [raw, setRaw] = React.useState<unknown>(null);
@@ -196,10 +266,28 @@ export default function ReportsPage() {
   const [jsonOpen, setJsonOpen] = React.useState(false);
   const [lastRunId, setLastRunId] = React.useState<string | null>(null);
 
+  const [sortColumn, setSortColumn] = React.useState("");
+  const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
+  const [sliceMode, setSliceMode] = React.useState<SliceMode>("all");
+  const [sliceCount, setSliceCount] = React.useState(10);
+
   const busy = runningId !== null;
   const lastRun = lastRunId
     ? REPORTS.find((r) => r.id === lastRunId)
     : null;
+
+  const displayRows = React.useMemo(
+    () =>
+      applyTableView(rows, {
+        sortKey: sortColumn,
+        sortDir: sortDir,
+        sliceMode,
+        sliceN: sliceCount,
+      }),
+    [rows, sortColumn, sortDir, sliceMode, sliceCount]
+  );
+
+  const tableColumns = React.useMemo(() => columnKeys(rows), [rows]);
 
   async function run(reportId: string) {
     setRunningId(reportId);
@@ -209,7 +297,13 @@ export default function ReportsPage() {
     setJsonOpen(false);
     try {
       const r = await getReport(reportId);
-      setRows(r.rows);
+      const nextRows = r.rows;
+      setRows(nextRows);
+      const keys = columnKeys(nextRows);
+      setSortColumn(keys[0] ?? "");
+      setSortDir("asc");
+      setSliceMode("all");
+      setSliceCount(10);
       setRaw(r.data);
       setLastRunId(reportId);
     } catch (e) {
@@ -340,8 +434,134 @@ export default function ReportsPage() {
                   Expand raw JSON below for the error payload returned by the API.
                 </p>
               </div>
-            ) : (
+            ) : rows.length === 0 ? (
               <DataTable rows={rows} />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto rounded-lg border bg-muted/20 px-3 py-2">
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    Sort by
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      disabled={tableColumns.length === 0}
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                        "h-8 min-w-[6rem] max-w-[min(100%,14rem)] shrink justify-between gap-1 px-2 font-normal",
+                        "disabled:pointer-events-none disabled:opacity-50"
+                      )}
+                    >
+                      <span className="min-w-0 flex-1 truncate text-left">
+                        {sortColumn || "Column"}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0 opacity-60" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="max-w-[min(100vw-2rem,20rem)]"
+                    >
+                      <DropdownMenuGroup>
+                        {tableColumns.map((k) => (
+                          <DropdownMenuItem
+                            key={k}
+                            className="justify-between gap-2"
+                            onClick={() => setSortColumn(k)}
+                          >
+                            <span className="min-w-0 flex-1 truncate">{k}</span>
+                            {sortColumn === k ? (
+                              <Check className="size-4 shrink-0 text-primary" />
+                            ) : null}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    aria-label={
+                      sortDir === "asc"
+                        ? "Sorted ascending. Click for descending."
+                        : "Sorted descending. Click for ascending."
+                    }
+                    title={
+                      sortDir === "asc"
+                        ? "Ascending (click for descending)"
+                        : "Descending (click for ascending)"
+                    }
+                    onClick={() =>
+                      setSortDir((d) => (d === "asc" ? "desc" : "asc"))
+                    }
+                  >
+                    {sortDir === "asc" ? (
+                      <ArrowUp className="size-4" />
+                    ) : (
+                      <ArrowDown className="size-4" />
+                    )}
+                  </Button>
+                  <span className="ml-1 shrink-0 text-xs text-muted-foreground">
+                    Filter
+                  </span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "sm" }),
+                        "h-8 min-w-[7rem] max-w-[11rem] shrink justify-between gap-1 px-2 font-normal"
+                      )}
+                    >
+                      <span className="min-w-0 flex-1 truncate text-left">
+                        {SLICE_MODE_LABEL[sliceMode]}
+                      </span>
+                      <ChevronDown className="size-4 shrink-0 opacity-60" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      <DropdownMenuGroup>
+                        {(["all", "top", "bottom"] as const).map((m) => (
+                          <DropdownMenuItem
+                            key={m}
+                            className="justify-between gap-2"
+                            onClick={() => setSliceMode(m)}
+                          >
+                            <span>{SLICE_MODE_LABEL[m]}</span>
+                            {sliceMode === m ? (
+                              <Check className="size-4 shrink-0 text-primary" />
+                            ) : null}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Label
+                    htmlFor="report-slice-n"
+                    className="mb-0 shrink-0 text-xs text-muted-foreground"
+                  >
+                    N
+                  </Label>
+                  <Input
+                    id="report-slice-n"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={Math.max(1, rows.length)}
+                    disabled={sliceMode === "all"}
+                    value={sliceCount}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      if (Number.isFinite(v))
+                        setSliceCount(Math.max(1, Math.floor(v)));
+                    }}
+                    className="h-7 w-11 px-1.5 text-xs md:w-12"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {sliceMode === "all"
+                    ? `${displayRows.length} row${displayRows.length === 1 ? "" : "s"}.`
+                    : `${displayRows.length} of ${rows.length} row${rows.length === 1 ? "" : "s"} (${sliceMode === "top" ? "top" : "bottom"} ${Math.min(sliceCount, rows.length)} after sort).`}
+                </p>
+                <DataTable rows={displayRows} />
+              </div>
             )}
 
             <div className="rounded-lg border border-border/80 bg-muted/20">
