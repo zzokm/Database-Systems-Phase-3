@@ -82,6 +82,20 @@ function JsonBox({ value }: { value: unknown }) {
   );
 }
 
+/** Normalize fetch errors so API JSON bodies (message, status) are visible in the panel */
+function serializeRequestError(e: unknown): unknown {
+  if (e && typeof e === "object" && "status" in e && "data" in e) {
+    const err = e as Error & { status: number; data: unknown };
+    return {
+      http: err.status,
+      note: err.message,
+      body: err.data,
+    };
+  }
+  if (e instanceof Error) return { message: e.message };
+  return e;
+}
+
 function parseNumber(value: FormDataEntryValue | null, fieldName: string) {
   const n = Number(value);
   if (Number.isNaN(n)) {
@@ -118,7 +132,11 @@ export default function CrudPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">CRUD</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Simple forms to trigger required operations.
+              Calls the Flask CRUD API at{" "}
+              <span className="font-mono text-xs">{API_BASE}</span>
+              . Request bodies use the same PascalCase keys as the backend (
+              <code className="text-xs">FarmID</code>,{" "}
+              <code className="text-xs">TotalDistanceKM</code>, etc.).
             </p>
           </div>
         </div>
@@ -146,15 +164,15 @@ export default function CrudPage() {
                       const fd = new FormData(e.currentTarget);
                       run(() =>
                         postJson("/api/harvest-batches", {
-                          farm_id: parseNumber(fd.get("farm_id"), "farm_id"),
-                          crop_type_id: parseNumber(fd.get("crop_type_id"), "crop_type_id"),
-                          harvest_date: String(fd.get("harvest_date")),
-                          available_quantity_kg: parseNumber(
+                          FarmID: parseNumber(fd.get("farm_id"), "FarmID"),
+                          CropTypeID: parseNumber(fd.get("crop_type_id"), "CropTypeID"),
+                          HarvestDate: String(fd.get("harvest_date")),
+                          AvailableQuantityKG: parseNumber(
                             fd.get("available_quantity_kg"),
-                            "available_quantity_kg"
+                            "AvailableQuantityKG"
                           ),
-                          price_per_kg: parseNumber(fd.get("price_per_kg"), "price_per_kg"),
-                          is_available: String(fd.get("is_available")) === "1",
+                          PricePerKG: parseNumber(fd.get("price_per_kg"), "PricePerKG"),
+                          IsAvailable: String(fd.get("is_available")) === "true",
                         })
                       );
                     }}
@@ -202,7 +220,15 @@ export default function CrudPage() {
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="is_available">Is Available</Label>
-                      <Input id="is_available" name="is_available" placeholder="1" required />
+                      <select
+                        id="is_available"
+                        name="is_available"
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        defaultValue="true"
+                      >
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                      </select>
                     </div>
                     <Button type="submit" disabled={busy}>
                       Submit
@@ -223,9 +249,9 @@ export default function CrudPage() {
                       const fd = new FormData(e.currentTarget);
                       run(() =>
                         postJson("/api/drivers", {
-                          first_name: String(fd.get("first_name")),
-                          last_name: String(fd.get("last_name")),
-                          phone: String(fd.get("phone") || ""),
+                          FirstName: String(fd.get("first_name")),
+                          LastName: String(fd.get("last_name")),
+                          Phone: String(fd.get("phone") || ""),
                         })
                       );
                     }}
@@ -266,7 +292,9 @@ export default function CrudPage() {
                       const restaurantId = String(fd.get("restaurant_id"));
                       run(() =>
                         putJson(`/api/restaurants/${encodeURIComponent(restaurantId)}/delivery-window`, {
-                          preferred_delivery_window: String(fd.get("preferred_delivery_window")),
+                          PreferredDeliveryWindow: String(
+                            fd.get("preferred_delivery_window")
+                          ).trim(),
                         })
                       );
                     }}
@@ -293,7 +321,7 @@ export default function CrudPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Update Trip Date</CardTitle>
+                  <CardTitle>Update Trip Distance</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -304,7 +332,10 @@ export default function CrudPage() {
                       const tripId = String(fd.get("trip_id"));
                       run(() =>
                         putJson(`/api/trips/${encodeURIComponent(tripId)}/route`, {
-                          trip_date: String(fd.get("trip_date")),
+                          TotalDistanceKM: parseNumber(
+                            fd.get("total_distance_km"),
+                            "TotalDistanceKM"
+                          ),
                         })
                       );
                     }}
@@ -314,8 +345,16 @@ export default function CrudPage() {
                       <Input id="trip_id" name="trip_id" placeholder="12" required />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="trip_date">Trip Date</Label>
-                      <Input id="trip_date" name="trip_date" type="datetime-local" required />
+                      <Label htmlFor="total_distance_km">Total Distance (KM)</Label>
+                      <Input
+                        id="total_distance_km"
+                        name="total_distance_km"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        placeholder="42.5"
+                        required
+                      />
                     </div>
                     <Button type="submit" disabled={busy}>
                       Submit
@@ -392,7 +431,7 @@ export default function CrudPage() {
                   <div className="text-sm font-medium text-destructive">
                     Request failed
                   </div>
-                  <JsonBox value={error} />
+                  <JsonBox value={serializeRequestError(error)} />
                 </>
               ) : (
                 <>
