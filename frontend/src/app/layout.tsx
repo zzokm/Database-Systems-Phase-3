@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Farm-to-Table • Phase 3",
+  title: "FarmDB",
   description: "Regional Farm-to-Table Distribution (Phase 3)",
 };
 

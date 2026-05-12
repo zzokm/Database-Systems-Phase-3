@@ -178,9 +178,6 @@ export default function ReportsPage() {
               Run the 6 mandatory analytical inquiries and render the results.
             </p>
           </div>
-          <div className="text-right text-xs text-muted-foreground">
-            API: <span className="font-mono">{API_BASE}</span>
-          </div>
         </div>
 
         <Separator className="my-6" />

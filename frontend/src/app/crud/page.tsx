@@ -122,9 +122,6 @@ export default function CrudPage() {
               aligned with the backend as you implement it.
             </p>
           </div>
-          <div className="text-right text-xs text-muted-foreground">
-            API: <span className="font-mono">{API_BASE}</span>
-          </div>
         </div>
 
         <Separator className="my-6" />
