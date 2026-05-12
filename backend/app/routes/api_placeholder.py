@@ -6,8 +6,9 @@ Parameterized INSERT / UPDATE / DELETE live in ``app.routes.crud`` (M2-1b).
 
 from __future__ import annotations
 
-from flask import Blueprint
+from flask import Blueprint, current_app, jsonify
 
+from app.db.connection import execute_select
 from app.responses import json_not_implemented
 
 bp = Blueprint("api_placeholder", __name__, url_prefix="/api")
@@ -16,26 +17,50 @@ bp = Blueprint("api_placeholder", __name__, url_prefix="/api")
 # --- Lookup stubs (Member 5) ---
 @bp.get("/farms")
 def get_farms():
-    return json_not_implemented(endpoint="GET /api/farms", assigned_hint="Member 5", method="GET")
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT FarmID, FarmName, Location
+        FROM Farms
+        ORDER BY FarmName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
 
 
 @bp.get("/restaurants")
 def get_restaurants():
-    return json_not_implemented(
-        endpoint="GET /api/restaurants", assigned_hint="Member 5", method="GET"
-    )
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT RestaurantID, RestaurantName, City, DeliveryAddress
+        FROM Restaurants
+        ORDER BY RestaurantName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
 
 
 @bp.get("/drivers")
 def get_drivers_list():
-    return json_not_implemented(endpoint="GET /api/drivers", assigned_hint="Member 5", method="GET")
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT DriverID, FirstName, LastName, Phone
+        FROM Drivers
+        ORDER BY LastName, FirstName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
 
 
 @bp.get("/crop-types")
 def get_crop_types():
-    return json_not_implemented(
-        endpoint="GET /api/crop-types", assigned_hint="Member 5", method="GET"
-    )
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT CropTypeID, CropTypeName
+        FROM CropTypes
+        ORDER BY CropTypeName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
 
 
 # --- Reports stubs (Members 3 & 4) ---
