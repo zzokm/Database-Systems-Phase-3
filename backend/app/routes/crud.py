@@ -3,9 +3,9 @@ from __future__ import annotations
 from flask import Blueprint, current_app, jsonify, request
  
 from app.db.connection import execute_select, execute_write
-
+ 
 bp = Blueprint("crud", __name__, url_prefix="/api")
-
+ 
 #input validation in private helper function 
 def _require_fields(body: dict, *fields: str):
     #Checks that all required fields are present in the request body.
@@ -17,7 +17,57 @@ def _require_fields(body: dict, *fields: str):
                 "message": f"Missing required field: '{field}'"
             }), 400
     return None
-
+ 
+ 
+# --- Lookup endpoints (Member 5) ---
+@bp.get("/farms")
+def get_farms():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT FarmID, FarmName, Location
+        FROM Farms
+        ORDER BY FarmName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+ 
+ 
+@bp.get("/restaurants")
+def get_restaurants():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT RestaurantID, RestaurantName, City, DeliveryAddress
+        FROM Restaurants
+        ORDER BY RestaurantName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+ 
+ 
+@bp.get("/drivers")
+def get_drivers_list():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT DriverID, FirstName, LastName, Phone
+        FROM Drivers
+        ORDER BY LastName, FirstName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+ 
+ 
+@bp.get("/crop-types")
+def get_crop_types():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT CropTypeID, CropTypeName
+        FROM CropTypes
+        ORDER BY CropTypeName
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+ 
+ 
 #FIRST INSERT statement: insert a new harvest batch into the HarvestBatches table. It expects a JSON body with the req fields after someone sends a POST reuest
 @bp.post("/harvest-batches")
 def post_harvest_batch():
@@ -58,7 +108,7 @@ def post_harvest_batch():
         "rows_affected": result["rows_affected"]
     }), 201
  
-
+ 
 #SECOND INSERT statement: insert a new driver into the Drivers table. It expects a JSON body with the required fields after someone sends a POST request 
 @bp.post("/drivers")
 def post_driver():
@@ -93,7 +143,7 @@ def post_driver():
         "message": "Driver registered successfully.",
         "rows_affected": result["rows_affected"]
     }), 201
-
+ 
 #FIRST UPDATE statement: update the PreferredDeliveryWindow for a specific restaurant in the Restaurants table
 @bp.put("/restaurants/<restaurant_id>/delivery-window")
 def put_restaurant_window(restaurant_id: str):
@@ -137,7 +187,7 @@ def put_restaurant_window(restaurant_id: str):
 #trip id from URL
 def put_trip_route(trip_id: str):
     body = request.get_json(silent=True) or {}
-
+ 
     err = _require_fields(body, "TotalDistanceKM")
     if err:
         return err
@@ -171,20 +221,20 @@ def put_trip_route(trip_id: str):
         "message": f"Trip {trip_id} distance updated successfully.",
         "rows_affected": result["rows_affected"]
     }), 200
-
+ 
 #FIRST DELETE statement: delete a specific order from Orders (TripOrders first; no CASCADE from Orders)
 @bp.delete("/orders/<order_id>")
 #order id from URL
 def delete_order(order_id: str):
     cfg = current_app.config["APP_CONFIG"]
-
+ 
     # TripOrders references Orders without ON DELETE CASCADE. Remove those rows first
     sql_trip_orders = """
         DELETE FROM TripOrders
         WHERE OrderID = ?
     """
     execute_write(cfg, sql_trip_orders, [order_id])
-
+ 
     # OrderDetails CASCADE when Orders row is deleted; deleting the order is enough after TripOrders
     sql_order = """
         DELETE FROM Orders
@@ -204,7 +254,7 @@ def delete_order(order_id: str):
         "rows_affected": result["rows_affected"]
     }), 200
  
-
+ 
 #SECOND DELETE statement: delete a specific harvest batch from the HarvestBatches table based on the provided batch_id, but only if it is still available (IsAvailable = 1)
 @bp.delete("/harvest-batches/<batch_id>")
 def delete_harvest_batch(batch_id: str):
@@ -232,8 +282,8 @@ def delete_harvest_batch(batch_id: str):
         "message": f"Harvest batch {batch_id} removed successfully.",
         "rows_affected": result["rows_affected"]
     }), 200
-
-
+ 
+ 
 @bp.get("/reports/inactive-restaurants")
 def get_report_inactive_restaurants():
     cfg = current_app.config["APP_CONFIG"]
@@ -252,8 +302,8 @@ def get_report_inactive_restaurants():
     """
     rows = execute_select(cfg, sql)
     return jsonify({"status": "ok", "rows": rows}), 200
-
-
+ 
+ 
 @bp.get("/reports/batches-by-restaurant")
 def get_report_batches_by_restaurant():
     cfg = current_app.config["APP_CONFIG"]
@@ -277,8 +327,8 @@ def get_report_batches_by_restaurant():
     """
     rows = execute_select(cfg, sql)
     return jsonify({"status": "ok", "rows": rows}), 200
-
-
+ 
+ 
 @bp.get("/reports/farm-revenue")
 def get_report_farm_revenue():
     cfg = current_app.config["APP_CONFIG"]
@@ -295,8 +345,8 @@ def get_report_farm_revenue():
     """
     rows = execute_select(cfg, sql)
     return jsonify({"status": "ok", "rows": rows}), 200
-
-
+ 
+ 
 @bp.get("/meta/routes")
 def api_meta():
     return jsonify(
@@ -308,6 +358,10 @@ def api_meta():
             ),
             "routes": [
                 {"method": "GET", "path": "/api/meta/routes"},
+                {"method": "GET", "path": "/api/farms"},
+                {"method": "GET", "path": "/api/restaurants"},
+                {"method": "GET", "path": "/api/drivers"},
+                {"method": "GET", "path": "/api/crop-types"},
                 {"method": "POST", "path": "/api/harvest-batches"},
                 {"method": "POST", "path": "/api/drivers"},
                 {"method": "PUT", "pattern": "/api/restaurants/{id}/delivery-window"},
@@ -320,4 +374,3 @@ def api_meta():
             ],
         }
     ), 200
- 
