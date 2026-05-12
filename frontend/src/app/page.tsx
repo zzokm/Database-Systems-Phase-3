@@ -60,6 +60,9 @@ export default function Home() {
                   <Link href="/reports" className={cn(buttonVariants({ variant: "outline" }))}>
                     Open Reports
                   </Link>
+                  <Link href="/erd" className={cn(buttonVariants({ variant: "outline" }))}>
+                    View ERD
+                  </Link>
                 </div>
               </div>
 

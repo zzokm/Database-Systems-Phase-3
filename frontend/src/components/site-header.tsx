@@ -10,7 +10,11 @@ import { Separator } from "@/components/ui/separator";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader({ active }: { active?: "home" | "crud" | "reports" }) {
+export function SiteHeader({
+  active,
+}: {
+  active?: "home" | "crud" | "reports" | "erd";
+}) {
   const [state, setState] = React.useState<
     | { kind: "checking" }
     | { kind: "down" }
@@ -124,6 +128,18 @@ export function SiteHeader({ active }: { active?: "home" | "crud" | "reports" })
             )}
           >
             Reports
+          </Link>
+          <Link
+            href="/erd"
+            aria-current={active === "erd" ? "page" : undefined}
+            className={cn(
+              buttonVariants({
+                variant: active === "erd" ? "default" : "ghost",
+                size: "sm",
+              })
+            )}
+          >
+            ERD
           </Link>
           <ModeToggle />
         </nav>
