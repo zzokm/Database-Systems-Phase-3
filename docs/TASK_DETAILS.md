@@ -1,7 +1,7 @@
 # Task details, deliverables & file touch map
 
 **Course:** Introduction to Database (IS211-SIS211) · Spring 2026  
-**Institution:** Cairo University — Faculty of Computers and Artificial Intelligence
+**Institution:** Cairo University - Faculty of Computers and Artificial Intelligence
 
 This document expands **every member task** from the Phase 3 master plan: numbered IDs, narrative, **deliverables**, and **typical repo files**. For checkboxes-only progress tracking, see [`WORK_ALLOCATION.md`](WORK_ALLOCATION.md).
 
@@ -20,42 +20,42 @@ This document expands **every member task** from the Phase 3 master plan: number
 - [Course requirement traceability](#syllabus-traceability)
 - [Reference: API route manifest](#api-route-manifest)
 
-**Member 1 — Database designer**
+**Member 1 - Database designer**
 
-- [M1-1 — Physical ERD design](#m1-1)
-- [M1-2 — Author `schema.sql` DDL](#m1-2)
-- [M1-3 — Review mock-data / inquiry coverage](#m1-3)
+- [M1-1 - Physical ERD design](#m1-1)
+- [M1-2 - Author `schema.sql` DDL](#m1-2)
+- [M1-3 - Review mock-data / inquiry coverage](#m1-3)
 
-**Member 2 — Backend CRUD & data-access**
+**Member 2 - Backend CRUD & data-access**
 
-- [M2-1 — INSERT / UPDATE / DELETE APIs](#m2-1)
-- [M2-2 — Data-layer ergonomics](#m2-2)
-- [M2-3 — Align JSON with UI](#m2-3)
+- [M2-1 - INSERT / UPDATE / DELETE APIs](#m2-1)
+- [M2-2 - Data-layer ergonomics](#m2-2)
+- [M2-3 - Align JSON with UI](#m2-3)
 
-**Member 3 — Analytics (inquiries 1–3)**
+**Member 3 - Analytics (inquiries 1–3)**
 
-- [M3-1 — SQL for inquiries 1–3](#m3-1)
-- [M3-2 — HTTP endpoints 1–3](#m3-2)
+- [M3-1 - SQL for inquiries 1–3](#m3-1)
+- [M3-2 - HTTP endpoints 1–3](#m3-2)
 
-**Member 4 — Analytics (inquiries 4–6) & security**
+**Member 4 - Analytics (inquiries 4–6) & security**
 
-- [M4-1 — SQL for inquiries 4–6](#m4-1)
-- [M4-2 — HTTP endpoints 4–6](#m4-2)
-- [M4-3 — SQL injection review](#m4-3)
+- [M4-1 - SQL for inquiries 4–6](#m4-1)
+- [M4-2 - HTTP endpoints 4–6](#m4-2)
+- [M4-3 - SQL injection review](#m4-3)
 
-**Member 5 — Data population & documentation**
+**Member 5 - Data population & documentation**
 
-- [M5-1 — Documentation PDF](#m5-1)
-- [M5-2 — Mock `INSERT` data](#m5-2)
-- [M5-3 — Lookup list APIs](#m5-3)
+- [M5-1 - Documentation PDF](#m5-1)
+- [M5-2 - Mock `INSERT` data](#m5-2)
+- [M5-3 - Lookup list APIs](#m5-3)
 
-**Member 6 — Full-stack & DevOps**
+**Member 6 - Full-stack & DevOps**
 
-- [M6-1 — Backend foundation](#m6-1)
-- [M6-2 — Frontend application](#m6-2)
-- [M6-3 — Wire reporting UI](#m6-3)
-- [M6-4 — Deployment rehearsal](#m6-4)
-- [M6-5 — Final ZIP](#m6-5)
+- [M6-1 - Backend foundation](#m6-1)
+- [M6-2 - Frontend application](#m6-2)
+- [M6-3 - Wire reporting UI](#m6-3)
+- [M6-4 - Deployment rehearsal](#m6-4)
+- [M6-5 - Final ZIP](#m6-5)
 
 ---
 
@@ -130,13 +130,13 @@ Submission assets **outside Git** but required by syllabus: **ZIP** (exact folde
 
 ## Numbered tasks by member
 
-### Member 1 — Database designer (physical ERD + DDL)
+### Member 1 - Database designer (physical ERD + DDL)
 
 ---
 
 <a id="m1-1"></a>
 
-#### Task **M1-1** — Physical ERD design
+#### Task **M1-1** - Physical ERD design
 
 Design the Phase 3 **physical ER model**: resolve M:N with bridge tables (`OrderDetails`-style junctions where applicable), list keys, FKs, appropriate SQL Server types, and indexing notes for recurring filters.
 
@@ -154,7 +154,7 @@ Design the Phase 3 **physical ER model**: resolve M:N with bridge tables (`Order
 
 <a id="m1-2"></a>
 
-#### Task **M1-2** — Author `schema.sql` DDL (`CREATE TABLE` + FKs)
+#### Task **M1-2** - Author `schema.sql` DDL (`CREATE TABLE` + FKs)
 
 Write or maintain authoritative **`CREATE TABLE`** statements for all entities supporting profiles, batches, orders, logistics, inquiries.
 
@@ -171,7 +171,7 @@ Write or maintain authoritative **`CREATE TABLE`** statements for all entities s
 
 <a id="m1-3"></a>
 
-#### Task **M1-3** — Review mock-data / inquiry coverage plan
+#### Task **M1-3** - Review mock-data / inquiry coverage plan
 
 Approve (or revise) Member 5’s **INSERT seed plan**: ensure edge cases (“farm with zero batches”, “restaurant silent last month”, etc.) and **six “last calendar month”** analytical queries yield meaningful non-empty grids where intended.
 
@@ -187,13 +187,13 @@ Approve (or revise) Member 5’s **INSERT seed plan**: ensure edge cases (“far
 
 ---
 
-### Member 2 — Backend CRUD & data-access engineer
+### Member 2 - Backend CRUD & data-access engineer
 
 ---
 
 <a id="m2-1"></a>
 
-#### Task **M2-1** — INSERT / UPDATE / DELETE API implementations (six endpoints)
+#### Task **M2-1** - INSERT / UPDATE / DELETE API implementations (six endpoints)
 
 Expose **six** Flask routes executing **parameterized raw SQL** (≥2 INSERT, ≥2 UPDATE, ≥2 DELETE on **distinct tables**, `WHERE` on deletes/updates). Today they return **501** from **`api_placeholder`**.
 
@@ -223,7 +223,7 @@ Suggested mapping (adapt to schema):
 
 <a id="m2-2"></a>
 
-#### Task **M2-2** — Reusable “data layer” ergonomics (+ validation/errors)
+#### Task **M2-2** - Reusable “data layer” ergonomics (+ validation/errors)
 
 Formalize reusable helpers: optional transaction wrapper, standardized validation errors (**400**), not-found (**404**), DB error masking (**503**/message policy team agrees).
 
@@ -242,7 +242,7 @@ Formalize reusable helpers: optional transaction wrapper, standardized validatio
 
 <a id="m2-3"></a>
 
-#### Task **M2-3** — Align HTTP JSON contracts with UI
+#### Task **M2-3** - Align HTTP JSON contracts with UI
 
 Ensure request/response shapes match **`frontend/src/app/crud/page.tsx`** form fields and downstream tables (coordinate with Member 6).
 
@@ -259,13 +259,13 @@ Ensure request/response shapes match **`frontend/src/app/crud/page.tsx`** form f
 
 ---
 
-### Member 3 — Backend analytics engineer (Inquiries **1 · 2 · 3**)
+### Member 3 - Backend analytics engineer (Inquiries **1 · 2 · 3**)
 
 ---
 
 <a id="m3-1"></a>
 
-#### Task **M3-1** — SQL for inquiries 1–3 tested in MSSQL
+#### Task **M3-1** - SQL for inquiries 1–3 tested in MSSQL
 
 Formulate **`JOIN`**-heavy **`SELECT`** statements answering:
 
@@ -276,7 +276,7 @@ Formulate **`JOIN`**-heavy **`SELECT`** statements answering:
 **Deliverables**
 
 1. `.sql` test scripts or runnable batches with expected sample output documented.
-2. Agreement on **`last_month`** semantics (calendar month UTC vs Cairo local vs DB server time — choose one).
+2. Agreement on **`last_month`** semantics (calendar month UTC vs Cairo local vs DB server time; choose one).
 
 **Primary files**
 
@@ -287,9 +287,9 @@ Formulate **`JOIN`**-heavy **`SELECT`** statements answering:
 
 <a id="m3-2"></a>
 
-#### Task **M3-2** — HTTP endpoints for inquiries 1–3
+#### Task **M3-2** - HTTP endpoints for inquiries 1–3
 
-Expose **three stable** JSON endpoints via Flask (recommended dedicated slugs, e.g. **`GET /api/reports/max-orders-by-crop`**, **`GET /api/reports/farms-no-activity-last-month`**, **`GET /api/reports/driver-most-trips-last-month`** — finalize with frontend).
+Expose **three stable** JSON endpoints via Flask (recommended dedicated slugs, e.g. **`GET /api/reports/max-orders-by-crop`**, **`GET /api/reports/farms-no-activity-last-month`**, **`GET /api/reports/driver-most-trips-last-month`** - finalize with frontend).
 
 **Deliverables**
 
@@ -304,13 +304,13 @@ Expose **three stable** JSON endpoints via Flask (recommended dedicated slugs, e
 
 ---
 
-### Member 4 — Backend analytics & security engineer (Inquiries **4 · 5 · 6** + SQLi assist)
+### Member 4 - Backend analytics & security engineer (Inquiries **4 · 5 · 6** + SQLi assist)
 
 ---
 
 <a id="m4-1"></a>
 
-#### Task **M4-1** — SQL for inquiries 4–6 tested in MSSQL
+#### Task **M4-1** - SQL for inquiries 4–6 tested in MSSQL
 
 Write & verify **`JOIN`** queries for:
 
@@ -332,7 +332,7 @@ Write & verify **`JOIN`** queries for:
 
 <a id="m4-2"></a>
 
-#### Task **M4-2** — HTTP endpoints for inquiries 4–6
+#### Task **M4-2** - HTTP endpoints for inquiries 4–6
 
 Three endpoints returning JSON (agree slug names + contract with **`frontend/src/app/reports/page.tsx`**).
 
@@ -349,7 +349,7 @@ Stable **`GET`** paths + documented response schema.
 
 <a id="m4-3"></a>
 
-#### Task **M4-3** — SQL injection review (assist Member 2)
+#### Task **M4-3** - SQL injection review (assist Member 2)
 
 Audit **every** dynamically built query path: parameterized placeholders, whitelist for sort columns, guarded dynamic table names discouraged.
 
@@ -364,13 +364,13 @@ Audit **every** dynamically built query path: parameterized placeholders, whitel
 
 ---
 
-### Member 5 — Data population & documentation assembly
+### Member 5 - Data population & documentation assembly
 
 ---
 
 <a id="m5-1"></a>
 
-#### Task **M5-1** — Documentation assembly (diagram exports + formatted PDF narrative)
+#### Task **M5-1** - Documentation assembly (diagram exports + formatted PDF narrative)
 
 Gather **Phase 1 requirements**, **Phase 2 conceptual ERD**, **Phase 3 physical ERD**, formatted per TA rubric → **Documentation PDF**.
 
@@ -387,13 +387,13 @@ Gather **Phase 1 requirements**, **Phase 2 conceptual ERD**, **Phase 3 physical 
 
 <a id="m5-2"></a>
 
-#### Task **M5-2** — Mock data `INSERT` statements in **`schema.sql`**
+#### Task **M5-2** - Mock data `INSERT` statements in **`schema.sql`**
 
 Author comprehensive **`INSERT`** sets so UI + inquiries run with realistic volumes; satisfies “last month” windows.
 
 **Deliverables**
 
-1. Seeds committed to **`db/schema.sql`** or separate **`db/seeds/*.sql`** (if CI split—but ZIP must satisfy “one schema.sql rule”; confirm TA).
+1. Seeds committed to **`db/schema.sql`** or separate **`db/seeds/*.sql`** (if CI split, but ZIP must satisfy “one schema.sql rule”; confirm TA).
 
 **Primary files**
 
@@ -403,7 +403,7 @@ Author comprehensive **`INSERT`** sets so UI + inquiries run with realistic volu
 
 <a id="m5-3"></a>
 
-#### Task **M5-3** — Lookup list APIs (**GET** singleton-table reads)
+#### Task **M5-3** - Lookup list APIs (**GET** singleton-table reads)
 
 Expose **`SELECT`** dropdown feeds:
 
@@ -423,13 +423,13 @@ Expose **`SELECT`** dropdown feeds:
 
 ---
 
-### Member 6 — Full-stack lead & DevOps (foundation + frontend + submission)
+### Member 6 - Full-stack lead & DevOps (foundation + frontend + submission)
 
 ---
 
 <a id="m6-1"></a>
 
-#### Task **M6-1** — Backend foundation (already shipped on `main`; extend only if needed)
+#### Task **M6-1** - Backend foundation (already shipped on `main`; extend only if needed)
 
 Flask skeleton, MSSQL **`pyodbc`** connection, Compose, **`docs/SETUP_AND_RUN.md`**, VS Code probe tasks.
 
@@ -449,7 +449,7 @@ Flask skeleton, MSSQL **`pyodbc`** connection, Compose, **`docs/SETUP_AND_RUN.md
 
 <a id="m6-2"></a>
 
-#### Task **M6-2** — Frontend application (structure + UX)
+#### Task **M6-2** - Frontend application (structure + UX)
 
 Own Next.js UX: **`/crud`**, **`/reports`**, shared layout/nav, polish theming/accessibility baseline.
 
@@ -468,7 +468,7 @@ Own Next.js UX: **`/crud`**, **`/reports`**, shared layout/nav, polish theming/a
 
 <a id="m6-3"></a>
 
-#### Task **M6-3** — Wire reporting dashboards to Member 3 & 4 APIs
+#### Task **M6-3** - Wire reporting dashboards to Member 3 & 4 APIs
 
 Populate **`reports/page.tsx`** data tables/charts from **`GET`** report endpoints (**no mocked data** final).
 
@@ -485,7 +485,7 @@ Populate **`reports/page.tsx`** data tables/charts from **`GET`** report endpoin
 
 <a id="m6-4"></a>
 
-#### Task **M6-4** — Deployment / hosting rehearsal
+#### Task **M6-4** - Deployment / hosting rehearsal
 
 Demonstrate reproducible compose or hosting story TA can grade (README section + runnable command).
 
@@ -502,7 +502,7 @@ Demonstrate reproducible compose or hosting story TA can grade (README section +
 
 <a id="m6-5"></a>
 
-#### Task **M6-5** — Final ZIP assembly (`ProjectID-TA-Title-Phase 3`)
+#### Task **M6-5** - Final ZIP assembly (`ProjectID-TA-Title-Phase 3`)
 
 One team member submits Google Classroom ZIP with **`Software Application Code`**, **`Documentation PDF`**, **`schema.sql`**.
 
@@ -523,7 +523,7 @@ ZIP matching naming rules containing:
 
 ## Course requirement traceability (syllabus checklist)
 
-These are TA-facing minimums—not owned by only one checkbox line in **`WORK_ALLOCATION.md`**—but map here:
+These are TA-facing minimums (not owned by only one checkbox line in **`WORK_ALLOCATION.md`**) but map here:
 
 | Syllabus rule | Implemented by tasks |
 |----------------|----------------------|

@@ -172,13 +172,13 @@ def put_trip_route(trip_id: str):
         "rows_affected": result["rows_affected"]
     }), 200
 
-#FIRST DELETE statement: delete a specific order from Orders (TripOrders first — no CASCADE from Orders)
+#FIRST DELETE statement: delete a specific order from Orders (TripOrders first; no CASCADE from Orders)
 @bp.delete("/orders/<order_id>")
 #order id from URL
 def delete_order(order_id: str):
     cfg = current_app.config["APP_CONFIG"]
 
-    # TripOrders references Orders without ON DELETE CASCADE — remove those rows first
+    # TripOrders references Orders without ON DELETE CASCADE. Remove those rows first
     sql_trip_orders = """
         DELETE FROM TripOrders
         WHERE OrderID = ?

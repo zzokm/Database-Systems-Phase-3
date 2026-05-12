@@ -1,13 +1,13 @@
 # WORK_ALLOCATION: Regional Farm-to-Table Distribution (Phase 3)
 
 **Course:** Introduction to Database (IS211-SIS211) · Spring 2026  
-**Institution:** Cairo University — Faculty of Computers and Artificial Intelligence
+**Institution:** Cairo University - Faculty of Computers and Artificial Intelligence
 
 This file is **checkbox-only** per person. For **full narrative, deliverables, and file paths**, use **[`TASK_DETAILS.md`](TASK_DETAILS.md)** (numbered tasks **M1-1** … **M6-5**).
 
 ---
 
-## Everyone — shared prerequisites & coordination
+## Everyone - shared prerequisites & coordination
 
 - [x] **Onboarding:** [`SETUP_AND_RUN.md`](SETUP_AND_RUN.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`.env.example`](../.env.example).
 - [x] **Backend route manifest** while Flask runs: `GET /api/meta/routes` (stubs return **501** until implemented).
@@ -17,7 +17,7 @@ This file is **checkbox-only** per person. For **full narrative, deliverables, a
 
 ---
 
-## Member 1 — Database designer (physical ERD + DDL)
+## Member 1 - Database designer (physical ERD + DDL)
 
 - [ ] **M1-1** Physical ERD finalized and exported (matches tables in `db/schema.sql`).
 - [ ] **M1-2** Authoritative DDL in **`db/schema.sql`** (`CREATE TABLE`, keys, FKs).
@@ -25,16 +25,16 @@ This file is **checkbox-only** per person. For **full narrative, deliverables, a
 
 ---
 
-## Member 2 — Backend CRUD & data-access engineer
+## Member 2 - Backend CRUD & data-access engineer
 
-- [x] **M2-1a** Stub HTTP routes exist for six CRUD operations (501 until SQL) — see [`TASK_DETAILS.md`](TASK_DETAILS.md) **M2-1** table.
+- [x] **M2-1a** Stub HTTP routes exist for six CRUD operations (501 until SQL) - see [`TASK_DETAILS.md`](TASK_DETAILS.md) **M2-1** table.
 - [ ] **M2-1b** Replace stubs with **parameterized** `INSERT` / `UPDATE` / `DELETE` (≥2 distinct tables each op type, `WHERE` on updates/deletes).
 - [ ] **M2-2** Reusable helpers, validation, and consistent HTTP error JSON (beyond bare `execute_select` / `execute_write`).
 - [ ] **M2-3** Lock request/response JSON with Member 6 for **`frontend/src/app/crud/page.tsx`**.
 
 ---
 
-## Member 3 — Backend analytics engineer (Inquiries 1–3)
+## Member 3 - Backend analytics engineer (Inquiries 1–3)
 
 - [ ] **M3-1** Final **`JOIN`** SQL for inquiries **1 · 2 · 3**, tested against MSSQL + seed data.
 - [ ] **M3-2** Three **`GET`** report endpoints exposing that SQL as JSON (**stable slugs**; update **`/api/meta/routes`** list).
@@ -43,7 +43,7 @@ This file is **checkbox-only** per person. For **full narrative, deliverables, a
 
 ---
 
-## Member 4 — Backend analytics & security engineer (Inquiries 4–6 + SQLi assist)
+## Member 4 - Backend analytics & security engineer (Inquiries 4–6 + SQLi assist)
 
 - [ ] **M4-1** Final **`JOIN`** SQL for inquiries **4 · 5 · 6**, tested against MSSQL + seed data.
 - [ ] **M4-2** Three **`GET`** report endpoints (**stable slugs**; **`/api/meta/routes`**).
@@ -53,7 +53,7 @@ This file is **checkbox-only** per person. For **full narrative, deliverables, a
 
 ---
 
-## Member 5 — Data population & documentation assembly
+## Member 5 - Data population & documentation assembly
 
 - [ ] **M5-1** Assemble **`Documentation PDF`** (Phase 1 + Phase 2 conceptual + Phase 3 physical ERD narrative).
 - [ ] **M5-2** Comprehensive mock **`INSERT`** data (meets **`/api`** + six inquiries; **`db/schema.sql`** or TA-approved seed layout).
@@ -61,7 +61,7 @@ This file is **checkbox-only** per person. For **full narrative, deliverables, a
 
 ---
 
-## Member 6 — Full-stack lead & DevOps
+## Member 6 - Full-stack lead & DevOps
 
 - [x] **M6-1** Backend foundation on repo (**Flask**, `pyodbc`, Compose, env, VS Code tasks, [`SETUP_AND_RUN.md`](SETUP_AND_RUN.md) §12).
 - [x] **M6-2a** Frontend shell (**Next.js** App Router, layout, `/crud`, `/reports` scaffolds, shadcn-style UI).
