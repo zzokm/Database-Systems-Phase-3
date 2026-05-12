@@ -36,7 +36,7 @@ CREATE TABLE HarvestBatches (
     HarvestDate DATE NOT NULL,
     AvailableQuantityKG DECIMAL(10,2) NOT NULL CHECK (AvailableQuantityKG > 0),
     PricePerKG DECIMAL(10,2) NOT NULL CHECK (PricePerKG > 0),
-    IsAvailable BIT DEFAULT 1,
+    IsAvailable BIT NOT NULL DEFAULT 1,
     FOREIGN KEY (FarmID) REFERENCES Farms(FarmID) ON DELETE CASCADE,
     FOREIGN KEY (CropTypeID) REFERENCES CropTypes(CropTypeID)
 );
@@ -56,8 +56,8 @@ CREATE TABLE Restaurants (
 CREATE TABLE Orders (
     OrderID INT IDENTITY(1,1) PRIMARY KEY,
     RestaurantID INT NOT NULL,
-    OrderDate DATETIME DEFAULT GETDATE(),
-    Status NVARCHAR(50) DEFAULT 'Pending',
+    OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
+    Status NVARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Confirmed', 'Delivered', 'Cancelled')),
     FOREIGN KEY (RestaurantID) REFERENCES Restaurants(RestaurantID) ON DELETE CASCADE
 );
 
@@ -68,6 +68,7 @@ CREATE TABLE OrderDetails (
     BatchID INT NOT NULL,
     QuantityOrderedKG DECIMAL(10,2) NOT NULL CHECK (QuantityOrderedKG > 0),
     UnitPriceAtOrder DECIMAL(10,2) NOT NULL CHECK (UnitPriceAtOrder > 0),
+    UNIQUE (OrderID, BatchID),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES HarvestBatches(BatchID)
 );
@@ -84,6 +85,7 @@ CREATE TABLE Drivers (
 CREATE TABLE Trips (
     TripID INT IDENTITY(1,1) PRIMARY KEY,
     DriverID INT NOT NULL,
+    TripDate DATETIME NOT NULL DEFAULT GETDATE(),
     TotalDistanceKM DECIMAL(8,2) NOT NULL CHECK (TotalDistanceKM >= 0),
     FOREIGN KEY (DriverID) REFERENCES Drivers(DriverID)
 );
@@ -92,7 +94,7 @@ CREATE TABLE Trips (
 CREATE TABLE TripOrders (
     TripID INT NOT NULL,
     OrderID INT NOT NULL,
-    DeliverySequence INT NOT NULL,
+    DeliverySequence INT NOT NULL CHECK (DeliverySequence > 0),
     PRIMARY KEY (TripID, OrderID),
     FOREIGN KEY (TripID) REFERENCES Trips(TripID) ON DELETE CASCADE,
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
