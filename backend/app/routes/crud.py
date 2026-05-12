@@ -172,22 +172,22 @@ def put_trip_route(trip_id: str):
         "rows_affected": result["rows_affected"]
     }), 200
 
-#FIRST DELETE statement: delete a specific order from the orderss table based on the provided order_id
+#FIRST DELETE statement: delete a specific order from Orders (TripOrders first — no CASCADE from Orders)
 @bp.delete("/orders/<order_id>")
 #order id from URL
 def delete_order(order_id: str):
     cfg = current_app.config["APP_CONFIG"]
- 
-    #Step 1:Delete child rows from orderdetails first due to foreign key relations
-    sql_details = """
-        DELETE FROM orderdetails
+
+    # TripOrders references Orders without ON DELETE CASCADE — remove those rows first
+    sql_trip_orders = """
+        DELETE FROM TripOrders
         WHERE OrderID = ?
     """
-    execute_write(cfg, sql_details, [order_id])
- 
-    #Step 2:Delete the parent order from orderss
+    execute_write(cfg, sql_trip_orders, [order_id])
+
+    # OrderDetails CASCADE when Orders row is deleted; deleting the order is enough after TripOrders
     sql_order = """
-        DELETE FROM orderss
+        DELETE FROM Orders
         WHERE OrderID = ?
     """
     result = execute_write(cfg, sql_order, [order_id])
