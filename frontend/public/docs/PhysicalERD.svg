@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="243mm" xmlns="http://www.w3.org/2000/svg" height="136mm" version="1.1" viewBox="0 0 919 516" xmlns:xlink="http://www.w3.org/1999/xlink">
+   <polyline fill="none" points="336,68 336,193" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="336,193 333,180 339,180" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="148,65 148,164" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="148,164 145,150 151,150" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="212,68 212,116 215,116 215,164" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="215,164 212,150 218,150" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="541,112 541,138" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="541,138 538,125 544,125" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="383,304 383,429" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="383,429 380,416 386,416" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="459,174 454,174 454,429" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="454,429 451,416 457,416" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="542,210 542,307 539,307 539,398" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="539,398 536,385 542,385" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="840,98 840,273 749,273" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="749,273 762,270 762,276" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="596,309 596,398" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="596,398 593,385 599,385" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <polyline fill="none" points="74,65 74,248 245,248" stroke="#0080c0" stroke-width="1"/>
+   <polygon fill="#0080c0" points="245,248 232,251 232,245" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
+   <rect x="2" y="5" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient1" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="2" y="5" fill="url(#Gradient1)" width="163" height="60" stroke="#0080c0" stroke-width="1"/>
+   <text x="83" y="16" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">Farms</text>
+   <line x1="2" x2="165" y1="22" y2="22" stroke="#0080c0" stroke-width="1"/>
+   <text x="7" y="32" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">FarmID</text>
+   <text x="7" y="45" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">FarmName</text>
+   <text x="7" y="58" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">Location</text>
+   <text x="67" y="32" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="67" y="45" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(100)</text>
+   <text x="67" y="58" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(200)</text>
+   <text x="139" y="32" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <rect x="204" y="15" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient2" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="204" y="15" fill="url(#Gradient2)" width="178" height="53" stroke="#0080c0" stroke-width="1"/>
+   <text x="293" y="26" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">CropTypes</text>
+   <line x1="204" x2="382" y1="32" y2="32" stroke="#0080c0" stroke-width="1"/>
+   <text x="209" y="42" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">CropTypeID</text>
+   <text x="209" y="55" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">CropTypeName</text>
+   <text x="291" y="42" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="291" y="55" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(50)</text>
+   <text x="357" y="42" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <rect x="492" y="2" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient3" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="492" y="2" fill="url(#Gradient3)" width="228" height="110" stroke="#0080c0" stroke-width="1"/>
+   <text x="606" y="13" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">Restaurants</text>
+   <line x1="492" x2="720" y1="19" y2="19" stroke="#0080c0" stroke-width="1"/>
+   <text x="497" y="29" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">RestaurantID</text>
+   <text x="497" y="42" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">RestaurantName</text>
+   <text x="497" y="55" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">DeliveryAddress</text>
+   <text x="497" y="68" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">City</text>
+   <text x="497" y="81" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">PostalCode</text>
+   <text x="497" y="94" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">PreferredDeliveryWindow</text>
+   <text x="497" y="107" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">ContactPhone</text>
+   <text x="623" y="29" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="623" y="42" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(100)</text>
+   <text x="623" y="55" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(200)</text>
+   <text x="623" y="68" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(50)</text>
+   <text x="623" y="81" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(20)</text>
+   <text x="623" y="94" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(100)</text>
+   <text x="623" y="107" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(20)</text>
+   <text x="695" y="29" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <rect x="763" y="26" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient4" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="763" y="26" fill="url(#Gradient4)" width="154" height="72" stroke="#0080c0" stroke-width="1"/>
+   <text x="840" y="37" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">Drivers</text>
+   <line x1="763" x2="917" y1="43" y2="43" stroke="#0080c0" stroke-width="1"/>
+   <text x="768" y="53" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">DriverID</text>
+   <text x="768" y="66" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">FirstName</text>
+   <text x="768" y="79" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">LastName</text>
+   <text x="768" y="92" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">Phone</text>
+   <text x="823" y="53" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="823" y="66" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(50)</text>
+   <text x="823" y="79" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(50)</text>
+   <text x="823" y="92" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(20)</text>
+   <text x="889" y="53" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <rect x="519" y="398" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient5" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="519" y="398" fill="url(#Gradient5)" width="164" height="59" stroke="#0080c0" stroke-width="1"/>
+   <text x="601" y="409" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">TripOrders</text>
+   <line x1="519" x2="683" y1="415" y2="415" stroke="#0080c0" stroke-width="1"/>
+   <text x="523" y="425" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">TripID</text>
+   <text x="523" y="438" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">OrderID</text>
+   <text x="523" y="451" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">DeliverySequence</text>
+   <text x="617" y="425" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="617" y="438" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="617" y="451" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="642" y="425" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk,fk2&gt;</text>
+   <text x="642" y="438" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk,fk1&gt;</text>
+   <rect x="294" y="429" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient6" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="294" y="429" fill="url(#Gradient6)" width="179" height="85" stroke="#0080c0" stroke-width="1"/>
+   <text x="383" y="440" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">OrderDetails</text>
+   <line x1="294" x2="473" y1="446" y2="446" stroke="#0080c0" stroke-width="1"/>
+   <text x="298" y="456" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">OrderDetailID</text>
+   <text x="298" y="469" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">OrderID</text>
+   <text x="298" y="482" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">BatchID</text>
+   <text x="298" y="495" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">QuantityOrderedKG</text>
+   <text x="298" y="508" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">UnitPriceAtOrder</text>
+   <text x="399" y="456" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="399" y="469" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="399" y="482" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="399" y="495" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">decimal</text>
+   <text x="399" y="508" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">decimal</text>
+   <text x="445" y="456" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <text x="445" y="469" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk2&gt;</text>
+   <text x="445" y="482" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk1&gt;</text>
+   <rect x="82" y="164" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient7" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="82" y="164" fill="url(#Gradient7)" width="135" height="53" stroke="#0080c0" stroke-width="1"/>
+   <text x="149" y="175" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">FarmCropSpecialties</text>
+   <line x1="82" x2="217" y1="181" y2="181" stroke="#0080c0" stroke-width="1"/>
+   <text x="87" y="191" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">FarmID</text>
+   <text x="87" y="203" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">CropTypeID</text>
+   <text x="151" y="191" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="151" y="203" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="176" y="191" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk,fk1&gt;</text>
+   <text x="176" y="203" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk,fk2&gt;</text>
+   <rect x="459" y="138" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient8" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="459" y="138" fill="url(#Gradient8)" width="166" height="72" stroke="#0080c0" stroke-width="1"/>
+   <text x="542" y="149" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">Orders</text>
+   <line x1="459" x2="625" y1="155" y2="155" stroke="#0080c0" stroke-width="1"/>
+   <text x="464" y="165" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">OrderID</text>
+   <text x="464" y="178" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">RestaurantID</text>
+   <text x="464" y="191" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">OrderDate</text>
+   <text x="464" y="204" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">Status</text>
+   <text x="532" y="165" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="532" y="178" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="532" y="191" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">datetime</text>
+   <text x="532" y="204" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">nvarchar(50)</text>
+   <text x="598" y="165" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <text x="598" y="178" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk&gt;</text>
+   <rect x="245" y="193" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient9" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="245" y="193" fill="url(#Gradient9)" width="184" height="111" stroke="#0080c0" stroke-width="1"/>
+   <text x="337" y="204" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">HarvestBatches</text>
+   <line x1="245" x2="429" y1="210" y2="210" stroke="#0080c0" stroke-width="1"/>
+   <text x="250" y="220" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">BatchID</text>
+   <text x="250" y="233" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">FarmID</text>
+   <text x="250" y="246" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">CropTypeID</text>
+   <text x="250" y="259" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">HarvestDate</text>
+   <text x="250" y="272" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">AvailableQuantityKG</text>
+   <text x="250" y="285" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">PricePerKG</text>
+   <text x="250" y="298" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">IsAvailable</text>
+   <text x="358" y="220" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="358" y="233" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="358" y="246" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="358" y="259" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">date</text>
+   <text x="358" y="272" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">decimal</text>
+   <text x="358" y="285" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">decimal</text>
+   <text x="358" y="298" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">bit</text>
+   <text x="404" y="220" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <text x="404" y="233" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk2&gt;</text>
+   <text x="404" y="246" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk1&gt;</text>
+   <rect x="579" y="237" fill="#ffffff" width="0" height="0" stroke="none" stroke-width="0"/>
+   <defs>
+      <linearGradient id="Gradient10" x1="0%" x2="100%" y1="0%" y2="100%" gradientUnits="objectBoundingBox">
+         <stop offset="5%" stop-color="#ffffff"/>
+         <stop offset="95%" stop-color="#b2d6fc"/>
+      </linearGradient>
+   </defs>
+   <rect x="579" y="237" fill="url(#Gradient10)" width="170" height="72" stroke="#0080c0" stroke-width="1"/>
+   <text x="664" y="248" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="middle">Trips</text>
+   <line x1="579" x2="749" y1="254" y2="254" stroke="#0080c0" stroke-width="1"/>
+   <text x="584" y="264" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">TripID</text>
+   <text x="584" y="277" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">DriverID</text>
+   <text x="584" y="290" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">TripDate</text>
+   <text x="584" y="303" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">TotalDistanceKM</text>
+   <text x="673" y="264" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">INT</text>
+   <text x="673" y="277" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">INT</text>
+   <text x="673" y="290" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">datetime</text>
+   <text x="673" y="303" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">decimal</text>
+   <text x="723" y="264" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start" text-decoration="underline">&lt;pk&gt;</text>
+   <text x="723" y="277" fill="#000000" font-size="10" font-family="'Arial Unicode MS','Arial'" text-anchor="start">&lt;fk&gt;</text>
+</svg>
