@@ -232,4 +232,92 @@ def delete_harvest_batch(batch_id: str):
         "message": f"Harvest batch {batch_id} removed successfully.",
         "rows_affected": result["rows_affected"]
     }), 200
+
+
+@bp.get("/reports/inactive-restaurants")
+def get_report_inactive_restaurants():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT
+            r.RestaurantID,
+            r.RestaurantName,
+            r.City,
+            r.DeliveryAddress
+        FROM Restaurants AS r
+        WHERE r.RestaurantID NOT IN (
+            SELECT o.RestaurantID
+            FROM Orders AS o
+            WHERE o.OrderDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        )
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/batches-by-restaurant")
+def get_report_batches_by_restaurant():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT
+            r.RestaurantID,
+            r.RestaurantName,
+            o.OrderID,
+            o.OrderDate,
+            hb.BatchID,
+            hb.CropTypeID,
+            od.QuantityOrderedKG,
+            od.UnitPriceAtOrder
+        FROM Orders AS o
+        JOIN Restaurants AS r ON o.RestaurantID = r.RestaurantID
+        JOIN OrderDetails AS od ON od.OrderID = o.OrderID
+        JOIN HarvestBatches AS hb ON hb.BatchID = od.BatchID
+        WHERE o.Status = 'Delivered'
+          AND o.OrderDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        ORDER BY r.RestaurantName, o.OrderDate DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/farm-revenue")
+def get_report_farm_revenue():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT
+            f.FarmID,
+            f.FarmName,
+            SUM(od.QuantityOrderedKG * od.UnitPriceAtOrder) AS TotalRevenue
+        FROM Farms AS f
+        JOIN HarvestBatches AS hb ON hb.FarmID = f.FarmID
+        JOIN OrderDetails AS od ON od.BatchID = hb.BatchID
+        GROUP BY f.FarmID, f.FarmName
+        ORDER BY TotalRevenue DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/meta/routes")
+def api_meta():
+    return jsonify(
+        {
+            "status": "ok",
+            "description": (
+                "Registered backend routes for the Flask API. "
+                "Use these slugs to verify your report endpoints."
+            ),
+            "routes": [
+                {"method": "GET", "path": "/api/meta/routes"},
+                {"method": "POST", "path": "/api/harvest-batches"},
+                {"method": "POST", "path": "/api/drivers"},
+                {"method": "PUT", "pattern": "/api/restaurants/{id}/delivery-window"},
+                {"method": "PUT", "pattern": "/api/trips/{id}/route"},
+                {"method": "DELETE", "pattern": "/api/orders/{id}"},
+                {"method": "DELETE", "pattern": "/api/harvest-batches/{id}"},
+                {"method": "GET", "path": "/api/reports/inactive-restaurants"},
+                {"method": "GET", "path": "/api/reports/batches-by-restaurant"},
+                {"method": "GET", "path": "/api/reports/farm-revenue"},
+            ],
+        }
+    ), 200
  
