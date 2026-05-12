@@ -23,7 +23,7 @@
 
 ## Stack
 
-- **Backend:** Python / Flask — MS SQL Server via **`pyodbc`** (**no ORM**).
+- **Backend:** Python / Flask - MS SQL Server via **`pyodbc`** (**no ORM**).
 - **Frontend:** **Next.js** (App Router), **React**, **TypeScript**, **Tailwind CSS**, **shadcn/ui-style** components ([`frontend/components.json`](frontend/components.json)).
 - **Database:** MS SQL Server hosted **outside** Docker Compose.
 
@@ -39,7 +39,7 @@
 
 ## Documentation
 
-- [SETUP_AND_RUN.md](docs/SETUP_AND_RUN.md) — install Node/npm, Python, ODBC, `.env`, run servers, Docker Compose notes.
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — runtime layout and environment variables.
-- [WORK_ALLOCATION.md](docs/WORK_ALLOCATION.md) — per-member checklist (status only).
-- [TASK_DETAILS.md](docs/TASK_DETAILS.md) — numbered tasks **M1-1 … M6-5**, deliverables, file map, ASCII tree.
+- [SETUP_AND_RUN.md](docs/SETUP_AND_RUN.md) - install Node/npm, Python, ODBC, `.env`, run servers, Docker Compose notes.
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) - runtime layout and environment variables.
+- [WORK_ALLOCATION.md](docs/WORK_ALLOCATION.md) - per-member checklist (status only).
+- [TASK_DETAILS.md](docs/TASK_DETAILS.md) - numbered tasks **M1-1 … M6-5**, deliverables, file map, ASCII tree.
