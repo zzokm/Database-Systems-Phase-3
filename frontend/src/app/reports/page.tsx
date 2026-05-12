@@ -14,25 +14,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { DynamicDataTable } from "@/components/dynamic-data-table";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
+import {
+  applyTableView,
+  columnKeys,
+  type Row,
+  SLICE_MODE_LABEL,
+  type SliceMode,
+} from "@/lib/table-view";
 import { cn } from "@/lib/utils";
 
 const FETCH_TIMEOUT_MS = 30_000;
 
 const API_BASE = getPublicApiBaseUrl();
-
-type Row = Record<string, unknown>;
 
 const REPORTS: Array<{
   queryNumber: number;
@@ -145,117 +143,6 @@ function JsonBox({
       {JSON.stringify(value, null, 2)}
     </pre>
   );
-}
-
-function DataTable({ rows }: { rows: Row[] }) {
-  if (!rows || rows.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground">No rows returned.</div>
-    );
-  }
-
-  const columns = Array.from(
-    rows.reduce((set, r) => {
-      Object.keys(r || {}).forEach((k) => set.add(k));
-      return set;
-    }, new Set<string>())
-  );
-
-  return (
-    <div className="overflow-auto rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {columns.map((c) => (
-              <TableHead key={c} className="whitespace-nowrap">
-                {c}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((r, idx) => (
-            <TableRow key={idx}>
-              {columns.map((c) => (
-                <TableCell key={c} className="align-top">
-                  <span className="font-mono text-xs">
-                    {formatCell(r?.[c])}
-                  </span>
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-
-function formatCell(v: unknown) {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "object") return JSON.stringify(v);
-  return String(v);
-}
-
-function columnKeys(rows: Row[]): string[] {
-  if (!rows?.length) return [];
-  const keys = new Set<string>();
-  rows.forEach((r) => Object.keys(r || {}).forEach((k) => keys.add(k)));
-  return Array.from(keys).sort();
-}
-
-function toSortableNumber(v: unknown): number | null {
-  if (typeof v === "number" && Number.isFinite(v)) return v;
-  if (typeof v === "string" && v.trim() !== "") {
-    const n = Number(v);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-}
-
-function compareCell(a: unknown, b: unknown): number {
-  const an = toSortableNumber(a);
-  const bn = toSortableNumber(b);
-  if (an !== null && bn !== null && an !== bn) return an < bn ? -1 : 1;
-  if (an !== null && bn === null) return -1;
-  if (an === null && bn !== null) return 1;
-  return formatCell(a).localeCompare(formatCell(b), undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
-}
-
-type SliceMode = "all" | "top" | "bottom";
-
-const SLICE_MODE_LABEL: Record<SliceMode, string> = {
-  all: "All",
-  top: "Top N",
-  bottom: "Bottom N",
-};
-
-function applyTableView(
-  rows: Row[],
-  opts: {
-    sortKey: string;
-    sortDir: "asc" | "desc";
-    sliceMode: SliceMode;
-    sliceN: number;
-  }
-): Row[] {
-  const out = rows.map((r) => ({ ...r }));
-  const keys = columnKeys(out);
-  const key = opts.sortKey && keys.includes(opts.sortKey) ? opts.sortKey : keys[0];
-  if (key) {
-    out.sort((a, b) => {
-      const c = compareCell(a[key], b[key]);
-      return opts.sortDir === "asc" ? c : -c;
-    });
-  }
-  const n = Math.max(1, Math.floor(opts.sliceN));
-  const cap = Math.min(n, out.length);
-  if (opts.sliceMode === "top") return out.slice(0, cap);
-  if (opts.sliceMode === "bottom") return out.slice(Math.max(0, out.length - cap));
-  return out;
 }
 
 export default function ReportsPage() {
@@ -435,7 +322,7 @@ export default function ReportsPage() {
                 </p>
               </div>
             ) : rows.length === 0 ? (
-              <DataTable rows={rows} />
+              <DynamicDataTable rows={rows} />
             ) : (
               <div className="space-y-3">
                 <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto rounded-lg border bg-muted/20 px-3 py-2">
@@ -560,7 +447,7 @@ export default function ReportsPage() {
                     ? `${displayRows.length} row${displayRows.length === 1 ? "" : "s"}.`
                     : `${displayRows.length} of ${rows.length} row${rows.length === 1 ? "" : "s"} (${sliceMode === "top" ? "top" : "bottom"} ${Math.min(sliceCount, rows.length)} after sort).`}
                 </p>
-                <DataTable rows={displayRows} />
+                <DynamicDataTable rows={displayRows} />
               </div>
             )}
 
