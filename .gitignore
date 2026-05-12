@@ -6,6 +6,7 @@ __pycache__/
 .venv/
 venv/
 env/
+fullschema.sql
 .env
 .env.*
 !.env.example
