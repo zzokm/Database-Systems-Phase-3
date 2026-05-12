@@ -4,9 +4,9 @@
 
 This repository hosts the web stack for the **Regional Farm-to-Table Distribution** Phase 3 project.
 
-- **Backend:** Python (**Flask**) REST API executing **parameterized raw SQL** via **`pyodbc`** — **no ORM**.
+- **Backend:** Python (**Flask**) REST API executing **parameterized raw SQL** via **`pyodbc`** - **no ORM**.
 - **Frontend:** **Next.js** (App Router), **React**, **TypeScript**, **Tailwind CSS**, UI primitives aligned with **shadcn/ui** conventions (`frontend/components.json`, `frontend/src/components/ui`).
-- **Database:** **MS SQL Server** hosted **externally** — **not** defined as a Compose service.
+- **Database:** **MS SQL Server** hosted **externally** - **not** defined as a Compose service.
 
 ## 2. Runtime Components
 
@@ -14,10 +14,10 @@ This repository hosts the web stack for the **Regional Farm-to-Table Distributio
 
 Flask exposes:
 
-- **`GET /health`** — liveness (no database).
-- **`GET /ready`** — lightweight `SELECT 1` probe (requires DB reachable).
-- **`GET /api/meta/routes`** — manifest of registered URLs (useful while CRUD/report handlers are still stubs).
-- **`/api/...` CRUD, lookups, and `/api/reports/<slug>` routes** — registered with **HTTP 501** placeholders until Members 2–5 attach SQL.
+- **`GET /health`** - liveness (no database).
+- **`GET /ready`** - lightweight `SELECT 1` probe (requires DB reachable).
+- **`GET /api/meta/routes`** - manifest of registered URLs (useful while CRUD/report handlers are still stubs).
+- **`/api/...` CRUD, lookups, and `/api/reports/<slug>` routes** - registered with **HTTP 501** placeholders until Members 2–5 attach SQL.
 
 WSGI entry for containers: `gunicorn --factory app.main:create_app`.
 
@@ -27,8 +27,8 @@ Single Next.js app calling the REST API using `NEXT_PUBLIC_API_BASE_URL`.
 
 Notable routes (App Router):
 
-- **`/crud`** — forms for INSERT/UPDATE/DELETE flows (wire-up pending finalized APIs).
-- **`/reports`** — dashboard shell for the six inquiries (data wiring pending).
+- **`/crud`** - forms for INSERT/UPDATE/DELETE flows (wire-up pending finalized APIs).
+- **`/reports`** - dashboard shell for the six inquiries (data wiring pending).
 
 ### 2.3 Docker Compose
 

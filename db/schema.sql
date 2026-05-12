@@ -1,6 +1,7 @@
 /*
   schema.sql (SQL Server / T-SQL)
   - Rerunnable: creates DB if needed, drops tables in dependency order, recreates everything.
+  - After DDL, load demo data with db/seed.sql (rerunnable; safe to repeat).
 */
 
 IF DB_ID(N'FarmDB') IS NULL
