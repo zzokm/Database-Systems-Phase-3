@@ -118,8 +118,7 @@ export default function CrudPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">CRUD</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Simple forms to trigger required operations. Endpoint paths can be
-              aligned with the backend as you implement it.
+              Simple forms to trigger required operations.
             </p>
           </div>
         </div>
@@ -150,7 +149,12 @@ export default function CrudPage() {
                           farm_id: parseNumber(fd.get("farm_id"), "farm_id"),
                           crop_type_id: parseNumber(fd.get("crop_type_id"), "crop_type_id"),
                           harvest_date: String(fd.get("harvest_date")),
-                          quantity: parseNumber(fd.get("quantity"), "quantity"),
+                          available_quantity_kg: parseNumber(
+                            fd.get("available_quantity_kg"),
+                            "available_quantity_kg"
+                          ),
+                          price_per_kg: parseNumber(fd.get("price_per_kg"), "price_per_kg"),
+                          is_available: String(fd.get("is_available")) === "1",
                         })
                       );
                     }}
@@ -173,8 +177,32 @@ export default function CrudPage() {
                       <Input id="harvest_date" name="harvest_date" type="date" required />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input id="quantity" name="quantity" type="number" min={0} required />
+                      <Label htmlFor="available_quantity_kg">Available Quantity (KG)</Label>
+                      <Input
+                        id="available_quantity_kg"
+                        name="available_quantity_kg"
+                        type="number"
+                        min={0.01}
+                        step="0.01"
+                        placeholder="250"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="price_per_kg">Price Per KG</Label>
+                      <Input
+                        id="price_per_kg"
+                        name="price_per_kg"
+                        type="number"
+                        min={0.01}
+                        step="0.01"
+                        placeholder="22.50"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="is_available">Is Available</Label>
+                      <Input id="is_available" name="is_available" placeholder="1" required />
                     </div>
                     <Button type="submit" disabled={busy}>
                       Submit
@@ -185,7 +213,7 @@ export default function CrudPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Register Driver</CardTitle>
+                  <CardTitle>Add Driver</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -195,24 +223,24 @@ export default function CrudPage() {
                       const fd = new FormData(e.currentTarget);
                       run(() =>
                         postJson("/api/drivers", {
-                          name: String(fd.get("name")),
+                          first_name: String(fd.get("first_name")),
+                          last_name: String(fd.get("last_name")),
                           phone: String(fd.get("phone") || ""),
-                          license_no: String(fd.get("license_no")),
                         })
                       );
                     }}
                   >
                     <div className="grid gap-1.5">
-                      <Label htmlFor="name">Driver Name</Label>
-                      <Input id="name" name="name" placeholder="Ahmed Ali" required />
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input id="first_name" name="first_name" placeholder="Ahmed" required />
+                    </div>
+                    <div className="grid gap-1.5">
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input id="last_name" name="last_name" placeholder="Hassan" required />
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="phone">Phone</Label>
                       <Input id="phone" name="phone" placeholder="0100..." />
-                    </div>
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="license_no">License No</Label>
-                      <Input id="license_no" name="license_no" placeholder="LIC-12345" required />
                     </div>
                     <Button type="submit" disabled={busy}>
                       Submit
@@ -238,7 +266,7 @@ export default function CrudPage() {
                       const restaurantId = String(fd.get("restaurant_id"));
                       run(() =>
                         putJson(`/api/restaurants/${encodeURIComponent(restaurantId)}/delivery-window`, {
-                          delivery_window: String(fd.get("delivery_window")),
+                          preferred_delivery_window: String(fd.get("preferred_delivery_window")),
                         })
                       );
                     }}
@@ -248,10 +276,10 @@ export default function CrudPage() {
                       <Input id="restaurant_id" name="restaurant_id" placeholder="5" required />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="delivery_window">Preferred Window</Label>
+                      <Label htmlFor="preferred_delivery_window">Preferred Delivery Window</Label>
                       <Input
-                        id="delivery_window"
-                        name="delivery_window"
+                        id="preferred_delivery_window"
+                        name="preferred_delivery_window"
                         placeholder="10:00-14:00"
                         required
                       />
@@ -265,7 +293,7 @@ export default function CrudPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Update Trip Route</CardTitle>
+                  <CardTitle>Update Trip Date</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -276,7 +304,7 @@ export default function CrudPage() {
                       const tripId = String(fd.get("trip_id"));
                       run(() =>
                         putJson(`/api/trips/${encodeURIComponent(tripId)}/route`, {
-                          route: String(fd.get("route")),
+                          trip_date: String(fd.get("trip_date")),
                         })
                       );
                     }}
@@ -286,8 +314,8 @@ export default function CrudPage() {
                       <Input id="trip_id" name="trip_id" placeholder="12" required />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="route">Route</Label>
-                      <Input id="route" name="route" placeholder="Farm → Restaurant" required />
+                      <Label htmlFor="trip_date">Trip Date</Label>
+                      <Input id="trip_date" name="trip_date" type="datetime-local" required />
                     </div>
                     <Button type="submit" disabled={busy}>
                       Submit
@@ -302,7 +330,7 @@ export default function CrudPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Cancel Order</CardTitle>
+                  <CardTitle>Delete Order</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form

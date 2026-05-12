@@ -55,7 +55,7 @@ export default function Home() {
 
                 <div className="flex flex-wrap gap-3">
                   <Link href="/crud" className={cn(buttonVariants({ variant: "default" }))}>
-                    Open CRUD (Create, Read, Update, Delete)
+                    Open CRUD
                   </Link>
                   <Link href="/reports" className={cn(buttonVariants({ variant: "outline" }))}>
                     Open Reports
@@ -124,6 +124,9 @@ export default function Home() {
                   <CardTitle className="text-base">CRUD</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground">
+                  <div className="font-medium text-foreground">
+                    CRUD: Create, Read, Update, Delete
+                  </div>
                   Straightforward forms to trigger required INSERT / UPDATE / DELETE
                   endpoints.
                 </CardContent>
