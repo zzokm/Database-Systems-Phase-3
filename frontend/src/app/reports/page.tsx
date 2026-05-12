@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 import { SiteHeader } from "@/components/site-header";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
+import { cn } from "@/lib/utils";
 
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -23,29 +25,61 @@ const API_BASE = getPublicApiBaseUrl();
 
 type Row = Record<string, unknown>;
 
-const REPORTS: Array<{ id: string; title: string; hint: string }> = [
-  { id: "top-crop", title: "1) Top crop by orders", hint: "Max orders per crop type" },
+const REPORTS: Array<{
+  queryNumber: number;
+  id: string;
+  title: string;
+  hint: string;
+  description: string;
+}> = [
   {
+    queryNumber: 1,
+    id: "top-crop",
+    title: "Top crop by orders",
+    hint: "Max orders per crop type",
+    description:
+      "Ranks crop types by how often they appear on order lines, using harvest batches and order details so you can see which produce drives the most order volume.",
+  },
+  {
+    queryNumber: 2,
     id: "inactive-farms",
-    title: "2) Inactive farms (last month)",
+    title: "Inactive farms (last month)",
     hint: "No batches listed/sold last month",
+    description:
+      "Lists farms that had no harvest batches with activity in the last calendar month - useful for spotting suppliers that went quiet.",
   },
   {
+    queryNumber: 3,
     id: "top-driver",
-    title: "3) Top driver by trips (last month)",
+    title: "Top driver by trips (last month)",
     hint: "Highest trips last month",
+    description:
+      "Aggregates trips per driver for the last month so you can see who logged the most delivery routes.",
   },
   {
+    queryNumber: 4,
     id: "inactive-restaurants",
-    title: "4) Inactive restaurants (last month)",
+    title: "Inactive restaurants (last month)",
     hint: "No orders last month",
+    description:
+      "Finds restaurants that placed no orders in the last calendar month to flag churn or follow-up opportunities.",
   },
   {
+    queryNumber: 5,
     id: "batches-by-restaurant",
-    title: "5) Batches delivered per restaurant (last month)",
+    title: "Batches delivered per restaurant (last month)",
     hint: "What batches delivered to each restaurant",
+    description:
+      "Connects orders, batches, and restaurants for the last month so you can see which batch lots were fulfilled to which customers.",
   },
-  { id: "farm-revenue", title: "6) Farm revenue totals", hint: "Revenue per farm" },
+  {
+    queryNumber: 6,
+    id: "farm-revenue",
+    title: "Farm revenue totals",
+    hint: "Revenue per farm",
+    description:
+      "Sums revenue attributable to each farm from fulfilled order lines (quantity × unit price) for an overall farm performance view.",
+  },
 ];
 
 function safeJson(text: string) {
@@ -76,7 +110,6 @@ async function getReport(name: string) {
     }) as Error & { status: number; data: unknown };
     throw err;
   }
-  // Convention: backend may return `{ rows: [...] }` or an array.
   const rows = Array.isArray(data)
     ? data
     : Array.isArray((data as { rows?: unknown } | null)?.rows)
@@ -85,10 +118,21 @@ async function getReport(name: string) {
   return { data, rows };
 }
 
-function JsonBox({ value }: { value: unknown }) {
+function JsonBox({
+  value,
+  className,
+}: {
+  value: unknown;
+  className?: string;
+}) {
   if (!value) return null;
   return (
-    <pre className="mt-3 max-h-72 overflow-auto rounded-lg border bg-muted/30 p-3 text-xs">
+    <pre
+      className={cn(
+        "max-h-96 overflow-auto rounded-md border bg-muted/30 p-3 text-xs leading-relaxed font-mono whitespace-pre-wrap",
+        className
+      )}
+    >
       {JSON.stringify(value, null, 2)}
     </pre>
   );
@@ -96,7 +140,9 @@ function JsonBox({ value }: { value: unknown }) {
 
 function DataTable({ rows }: { rows: Row[] }) {
   if (!rows || rows.length === 0) {
-    return <div className="text-sm text-muted-foreground">No rows returned.</div>;
+    return (
+      <div className="text-sm text-muted-foreground">No rows returned.</div>
+    );
   }
 
   const columns = Array.from(
@@ -143,26 +189,36 @@ function formatCell(v: unknown) {
 }
 
 export default function ReportsPage() {
-  const [active, setActive] = React.useState<string | null>(null);
   const [rows, setRows] = React.useState<Row[]>([]);
   const [raw, setRaw] = React.useState<unknown>(null);
   const [error, setError] = React.useState<unknown>(null);
-  const [busy, setBusy] = React.useState(false);
+  const [runningId, setRunningId] = React.useState<string | null>(null);
+  const [jsonOpen, setJsonOpen] = React.useState(false);
+  const [lastRunId, setLastRunId] = React.useState<string | null>(null);
 
-  async function run(id: string) {
-    setActive(id);
-    setBusy(true);
+  const busy = runningId !== null;
+  const lastRun = lastRunId
+    ? REPORTS.find((r) => r.id === lastRunId)
+    : null;
+
+  async function run(reportId: string) {
+    setRunningId(reportId);
     setRows([]);
     setRaw(null);
     setError(null);
+    setJsonOpen(false);
     try {
-      const r = await getReport(id);
+      const r = await getReport(reportId);
       setRows(r.rows);
       setRaw(r.data);
+      setLastRunId(reportId);
     } catch (e) {
       setError(e);
+      const ex = e as Error & { status?: number; data?: unknown };
+      setRaw(ex.data ?? { message: ex.message, status: ex.status });
+      setLastRunId(null);
     } finally {
-      setBusy(false);
+      setRunningId(null);
     }
   }
 
@@ -184,64 +240,135 @@ export default function ReportsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Choose a report</CardTitle>
+            <CardTitle>Run a report</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Click any card to run that query in one step.
+            </p>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 md:grid-cols-2">
-              {REPORTS.map((r) => (
-                <Button
-                  key={r.id}
-                  variant={active === r.id ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => run(r.id)}
-                  disabled={busy}
-                >
-                  <span className="truncate">{r.title}</span>
-                </Button>
-              ))}
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {REPORTS.map((r) => {
+                const isRunning = runningId === r.id;
+                const isLastRun = lastRunId === r.id && !isRunning;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void run(r.id)}
+                    className={cn(
+                      "flex h-full min-h-[8.5rem] flex-col gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors",
+                      "hover:border-foreground/20 hover:bg-muted/30",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "disabled:pointer-events-none disabled:opacity-60",
+                      isRunning &&
+                        "border-primary bg-primary/5 ring-2 ring-primary/30",
+                      isLastRun &&
+                        !isRunning &&
+                        "border-primary/50 bg-primary/[0.03] ring-1 ring-primary/20"
+                    )}
+                  >
+                    <div className="flex gap-3">
+                      <div
+                        className={cn(
+                          "flex size-10 shrink-0 items-center justify-center rounded-lg border text-sm font-semibold tabular-nums",
+                          isRunning || isLastRun
+                            ? "border-primary/40 bg-primary/10 text-primary"
+                            : "border-border bg-muted/70 text-foreground"
+                        )}
+                        aria-label={`Query ${r.queryNumber}`}
+                      >
+                        {isRunning ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          r.queryNumber
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="text-sm font-semibold leading-snug tracking-tight">
+                            {r.title}
+                          </div>
+                          {isRunning ? (
+                            <span className="shrink-0 text-[0.65rem] font-medium text-primary">
+                              Running…
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          {r.description}
+                        </p>
+                        <p className="text-[0.7rem] leading-snug text-muted-foreground/85">
+                          {r.hint}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge variant="secondary">Returns JSON</Badge>
-              <span>Tables render dynamically based on returned columns.</span>
+              <span>Table columns follow the API response.</span>
             </div>
           </CardContent>
         </Card>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Table</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {error ? (
-                <>
-                  <div className="text-sm font-medium text-destructive">
-                    Request failed
-                  </div>
-                  <JsonBox value={error} />
-                </>
-              ) : (
-                <DataTable rows={rows} />
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Raw JSON</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <JsonBox value={raw} />
-              {!raw && !error && (
-                <div className="text-sm text-muted-foreground">
-                  Pick a report to see the raw response.
+        <Card className="mt-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Results</CardTitle>
+            {lastRun ? (
+              <p className="text-sm text-muted-foreground">
+                Query {lastRun.queryNumber}: {lastRun.title}
+              </p>
+            ) : error ? (
+              <p className="text-sm text-destructive">Last request failed</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Click a report card above to populate this panel.
+              </p>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error ? (
+              <div className="space-y-2">
+                <div className="text-sm font-medium text-destructive">
+                  {(error as Error)?.message ?? "Request failed"}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                <p className="text-xs text-muted-foreground">
+                  Expand raw JSON below for the error payload returned by the API.
+                </p>
+              </div>
+            ) : (
+              <DataTable rows={rows} />
+            )}
+
+            <div className="rounded-lg border border-border/80 bg-muted/20">
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-10 w-full justify-center gap-2 rounded-none rounded-t-lg border-b border-border/60 text-muted-foreground hover:text-foreground"
+                onClick={() => setJsonOpen((o) => !o)}
+                disabled={!raw && !error}
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform duration-200",
+                    jsonOpen && "rotate-180"
+                  )}
+                />
+                {jsonOpen ? "Hide raw JSON" : "Show raw JSON"}
+              </Button>
+              {jsonOpen ? (
+                <div className="p-3 pt-2">
+                  <JsonBox value={raw} className="border-0 bg-transparent" />
+                </div>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
 }
-
