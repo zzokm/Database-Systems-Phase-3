@@ -55,7 +55,7 @@ export default function Home() {
 
                 <div className="flex flex-wrap gap-3">
                   <Link href="/crud" className={cn(buttonVariants({ variant: "default" }))}>
-                    Open CRUD
+                    Open CRUD (Create, Read, Update, Delete)
                   </Link>
                   <Link href="/reports" className={cn(buttonVariants({ variant: "outline" }))}>
                     Open Reports

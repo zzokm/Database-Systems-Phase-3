@@ -1,10 +1,29 @@
-CREATE DATABASE FarmDB;
+/*
+  schema.sql (SQL Server / T-SQL)
+  - Rerunnable: creates DB if needed, drops tables in dependency order, recreates everything.
+*/
+
+IF DB_ID(N'FarmDB') IS NULL
+BEGIN
+    CREATE DATABASE FarmDB;
+END
 GO
 
 USE FarmDB;
 GO
 
-
+-- Drop tables in reverse dependency order (assumes default schema dbo)
+IF OBJECT_ID(N'dbo.TripOrders', N'U') IS NOT NULL DROP TABLE dbo.TripOrders;
+IF OBJECT_ID(N'dbo.OrderDetails', N'U') IS NOT NULL DROP TABLE dbo.OrderDetails;
+IF OBJECT_ID(N'dbo.Trips', N'U') IS NOT NULL DROP TABLE dbo.Trips;
+IF OBJECT_ID(N'dbo.Orders', N'U') IS NOT NULL DROP TABLE dbo.Orders;
+IF OBJECT_ID(N'dbo.Drivers', N'U') IS NOT NULL DROP TABLE dbo.Drivers;
+IF OBJECT_ID(N'dbo.Restaurants', N'U') IS NOT NULL DROP TABLE dbo.Restaurants;
+IF OBJECT_ID(N'dbo.HarvestBatches', N'U') IS NOT NULL DROP TABLE dbo.HarvestBatches;
+IF OBJECT_ID(N'dbo.FarmCropSpecialties', N'U') IS NOT NULL DROP TABLE dbo.FarmCropSpecialties;
+IF OBJECT_ID(N'dbo.CropTypes', N'U') IS NOT NULL DROP TABLE dbo.CropTypes;
+IF OBJECT_ID(N'dbo.Farms', N'U') IS NOT NULL DROP TABLE dbo.Farms;
+GO
 
 -- 1. Farms table
 CREATE TABLE Farms (
@@ -36,7 +55,7 @@ CREATE TABLE HarvestBatches (
     HarvestDate DATE NOT NULL,
     AvailableQuantityKG DECIMAL(10,2) NOT NULL CHECK (AvailableQuantityKG > 0),
     PricePerKG DECIMAL(10,2) NOT NULL CHECK (PricePerKG > 0),
-    IsAvailable BIT DEFAULT 1,
+    IsAvailable BIT NOT NULL DEFAULT 1,
     FOREIGN KEY (FarmID) REFERENCES Farms(FarmID) ON DELETE CASCADE,
     FOREIGN KEY (CropTypeID) REFERENCES CropTypes(CropTypeID)
 );
@@ -56,8 +75,8 @@ CREATE TABLE Restaurants (
 CREATE TABLE Orders (
     OrderID INT IDENTITY(1,1) PRIMARY KEY,
     RestaurantID INT NOT NULL,
-    OrderDate DATETIME DEFAULT GETDATE(),
-    Status NVARCHAR(50) DEFAULT 'Pending',
+    OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
+    Status NVARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Confirmed', 'Delivered', 'Cancelled')),
     FOREIGN KEY (RestaurantID) REFERENCES Restaurants(RestaurantID) ON DELETE CASCADE
 );
 
@@ -68,6 +87,7 @@ CREATE TABLE OrderDetails (
     BatchID INT NOT NULL,
     QuantityOrderedKG DECIMAL(10,2) NOT NULL CHECK (QuantityOrderedKG > 0),
     UnitPriceAtOrder DECIMAL(10,2) NOT NULL CHECK (UnitPriceAtOrder > 0),
+    UNIQUE (OrderID, BatchID),
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
     FOREIGN KEY (BatchID) REFERENCES HarvestBatches(BatchID)
 );
@@ -84,6 +104,7 @@ CREATE TABLE Drivers (
 CREATE TABLE Trips (
     TripID INT IDENTITY(1,1) PRIMARY KEY,
     DriverID INT NOT NULL,
+    TripDate DATETIME NOT NULL DEFAULT GETDATE(),
     TotalDistanceKM DECIMAL(8,2) NOT NULL CHECK (TotalDistanceKM >= 0),
     FOREIGN KEY (DriverID) REFERENCES Drivers(DriverID)
 );
@@ -92,9 +113,9 @@ CREATE TABLE Trips (
 CREATE TABLE TripOrders (
     TripID INT NOT NULL,
     OrderID INT NOT NULL,
-    DeliverySequence INT NOT NULL,
+    DeliverySequence INT NOT NULL CHECK (DeliverySequence > 0),
     PRIMARY KEY (TripID, OrderID),
     FOREIGN KEY (TripID) REFERENCES Trips(TripID) ON DELETE CASCADE,
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
- 
+GO
