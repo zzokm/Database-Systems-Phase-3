@@ -1,10 +1,29 @@
-CREATE DATABASE FarmDB;
+/*
+  schema.sql (SQL Server / T-SQL)
+  - Rerunnable: creates DB if needed, drops tables in dependency order, recreates everything.
+*/
+
+IF DB_ID(N'FarmDB') IS NULL
+BEGIN
+    CREATE DATABASE FarmDB;
+END
 GO
 
 USE FarmDB;
 GO
 
-
+-- Drop tables in reverse dependency order (assumes default schema dbo)
+IF OBJECT_ID(N'dbo.TripOrders', N'U') IS NOT NULL DROP TABLE dbo.TripOrders;
+IF OBJECT_ID(N'dbo.OrderDetails', N'U') IS NOT NULL DROP TABLE dbo.OrderDetails;
+IF OBJECT_ID(N'dbo.Trips', N'U') IS NOT NULL DROP TABLE dbo.Trips;
+IF OBJECT_ID(N'dbo.Orders', N'U') IS NOT NULL DROP TABLE dbo.Orders;
+IF OBJECT_ID(N'dbo.Drivers', N'U') IS NOT NULL DROP TABLE dbo.Drivers;
+IF OBJECT_ID(N'dbo.Restaurants', N'U') IS NOT NULL DROP TABLE dbo.Restaurants;
+IF OBJECT_ID(N'dbo.HarvestBatches', N'U') IS NOT NULL DROP TABLE dbo.HarvestBatches;
+IF OBJECT_ID(N'dbo.FarmCropSpecialties', N'U') IS NOT NULL DROP TABLE dbo.FarmCropSpecialties;
+IF OBJECT_ID(N'dbo.CropTypes', N'U') IS NOT NULL DROP TABLE dbo.CropTypes;
+IF OBJECT_ID(N'dbo.Farms', N'U') IS NOT NULL DROP TABLE dbo.Farms;
+GO
 
 -- 1. Farms table
 CREATE TABLE Farms (
@@ -99,4 +118,4 @@ CREATE TABLE TripOrders (
     FOREIGN KEY (TripID) REFERENCES Trips(TripID) ON DELETE CASCADE,
     FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
- 
+GO
