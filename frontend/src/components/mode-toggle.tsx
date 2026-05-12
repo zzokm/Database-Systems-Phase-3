@@ -8,14 +8,22 @@ import { Button } from "@/components/ui/button";
 
 export function ModeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-  const ready = resolvedTheme !== undefined;
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
+  const ready = mounted && resolvedTheme !== undefined;
 
   return (
     <Button
       variant="outline"
       size="icon"
       aria-label="Toggle theme"
-      aria-pressed={ready && resolvedTheme === "dark"}
+      suppressHydrationWarning
+      aria-pressed={ready ? resolvedTheme === "dark" : false}
       title="Toggle theme"
       onClick={() => {
         if (!ready) return;
