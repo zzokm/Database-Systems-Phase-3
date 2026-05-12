@@ -265,7 +265,7 @@ DECLARE @BatchIds TABLE (
     BatchID  INT NOT NULL
 );
 
-;WITH plan AS (
+;WITH BatchSeed AS (
     SELECT BatchKey, FarmName, CropTypeName, DayOffset, AvailableQuantityKG, PricePerKG, IsAvailable
     FROM (VALUES
         (1,  N'Green Valley Farm', N'Tomato',   -12, 500.00, 22.50, 1),
@@ -292,7 +292,7 @@ DECLARE @BatchIds TABLE (
 )
 INSERT INTO @BatchIds (BatchKey, BatchID)
 SELECT p.BatchKey, hb.BatchID
-FROM plan p
+FROM BatchSeed p
 INNER JOIN dbo.Farms f ON f.FarmName = p.FarmName
 INNER JOIN dbo.CropTypes c ON c.CropTypeName = p.CropTypeName
 INNER JOIN dbo.HarvestBatches hb
