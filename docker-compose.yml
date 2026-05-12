@@ -1,6 +1,6 @@
 # Docker Compose reads a file named exactly `.env` in this folder for `${VAR}`
 # substitution (e.g. FRONTEND_EXPOSED_PORT). A file named `.env.prod` alone does not
-# apply to interpolation — copy or symlink: `cp .env.prod .env` on the server, or set
+# apply to interpolation: copy or symlink: `cp .env.prod .env` on the server, or set
 # the same variables in Dokploy/host environment before `docker compose up`.
 services:
   backend:
