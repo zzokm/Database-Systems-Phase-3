@@ -1,6 +1,100 @@
--- schema.sql
--- This file will contain:
--- - Full DDL (`CREATE TABLE`, keys, constraints) for the MS SQL Server database
--- - Mock data (`INSERT INTO ...`) sufficient to make all "last month" inquiries return results
--- - Any required seed/lookups (e.g., crop types) used by the application
+CREATE DATABASE FarmDB;
+GO
 
+USE FarmDB;
+GO
+
+
+
+-- 1. Farms table
+CREATE TABLE Farms (
+    FarmID INT IDENTITY(1,1) PRIMARY KEY,
+    FarmName NVARCHAR(100) NOT NULL,
+    Location NVARCHAR(200) NOT NULL
+);
+
+-- 2. CropTypes table
+CREATE TABLE CropTypes (
+    CropTypeID INT IDENTITY(1,1) PRIMARY KEY,
+    CropTypeName NVARCHAR(50) NOT NULL UNIQUE
+);
+
+-- 3. FarmCropSpecialties (M:N bridge)
+CREATE TABLE FarmCropSpecialties (
+    FarmID INT NOT NULL,
+    CropTypeID INT NOT NULL,
+    PRIMARY KEY (FarmID, CropTypeID),
+    FOREIGN KEY (FarmID) REFERENCES Farms(FarmID) ON DELETE CASCADE,
+    FOREIGN KEY (CropTypeID) REFERENCES CropTypes(CropTypeID) ON DELETE CASCADE
+);
+
+-- 4. HarvestBatches table
+CREATE TABLE HarvestBatches (
+    BatchID INT IDENTITY(1,1) PRIMARY KEY,
+    FarmID INT NOT NULL,
+    CropTypeID INT NOT NULL,
+    HarvestDate DATE NOT NULL,
+    AvailableQuantityKG DECIMAL(10,2) NOT NULL CHECK (AvailableQuantityKG > 0),
+    PricePerKG DECIMAL(10,2) NOT NULL CHECK (PricePerKG > 0),
+    IsAvailable BIT DEFAULT 1,
+    FOREIGN KEY (FarmID) REFERENCES Farms(FarmID) ON DELETE CASCADE,
+    FOREIGN KEY (CropTypeID) REFERENCES CropTypes(CropTypeID)
+);
+
+-- 5. Restaurants table
+CREATE TABLE Restaurants (
+    RestaurantID INT IDENTITY(1,1) PRIMARY KEY,
+    RestaurantName NVARCHAR(100) NOT NULL,
+    DeliveryAddress NVARCHAR(200) NOT NULL,
+    City NVARCHAR(50) NOT NULL,
+    PostalCode NVARCHAR(20) NULL,
+    PreferredDeliveryWindow NVARCHAR(100) NULL,
+    ContactPhone NVARCHAR(20) NULL
+);
+
+-- 6. Orders table
+CREATE TABLE Orders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    RestaurantID INT NOT NULL,
+    OrderDate DATETIME DEFAULT GETDATE(),
+    Status NVARCHAR(50) DEFAULT 'Pending',
+    FOREIGN KEY (RestaurantID) REFERENCES Restaurants(RestaurantID) ON DELETE CASCADE
+);
+
+-- 7. OrderDetails table (M:N bridge between Orders and HarvestBatches)
+CREATE TABLE OrderDetails (
+    OrderDetailID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT NOT NULL,
+    BatchID INT NOT NULL,
+    QuantityOrderedKG DECIMAL(10,2) NOT NULL CHECK (QuantityOrderedKG > 0),
+    UnitPriceAtOrder DECIMAL(10,2) NOT NULL CHECK (UnitPriceAtOrder > 0),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID) ON DELETE CASCADE,
+    FOREIGN KEY (BatchID) REFERENCES HarvestBatches(BatchID)
+);
+
+-- 8. Drivers table
+CREATE TABLE Drivers (
+    DriverID INT IDENTITY(1,1) PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Phone NVARCHAR(20) NULL
+);
+
+-- 9. Trips table
+CREATE TABLE Trips (
+    TripID INT IDENTITY(1,1) PRIMARY KEY,
+    DriverID INT NOT NULL,
+    TotalDistanceKM DECIMAL(8,2) NOT NULL CHECK (TotalDistanceKM >= 0),
+    FOREIGN KEY (DriverID) REFERENCES Drivers(DriverID)
+);
+
+-- 10. TripOrders table (M:N bridge between Trips and Orders)
+CREATE TABLE TripOrders (
+    TripID INT NOT NULL,
+    OrderID INT NOT NULL,
+    DeliverySequence INT NOT NULL,
+    PRIMARY KEY (TripID, OrderID),
+    FOREIGN KEY (TripID) REFERENCES Trips(TripID) ON DELETE CASCADE,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+ 
