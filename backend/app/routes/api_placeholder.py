@@ -8,9 +8,9 @@ This module returns HTTP 501 + JSON until those handlers replace the stubs.
 from __future__ import annotations
 
 from flask import Blueprint
-
 from app.responses import json_not_implemented
-
+from flask import current_app, jsonify  
+from app.db.connection import execute_select
 bp = Blueprint("api_placeholder", __name__, url_prefix="/api")
 
 
@@ -95,13 +95,75 @@ def get_crop_types():
 
 
 # --- Reports stubs (Members 3 & 4) ---
-@bp.get("/reports/<report_slug>")
-def get_report_placeholder(report_slug: str):
-    return json_not_implemented(
-        endpoint=f"GET /api/reports/{report_slug}",
-        assigned_hint="Members 3–4",
-        method="GET",
-    )
+# --- Reports stubs (Members 3 & 4) ---
+
+# MEMBER 3: Inquiries 1, 2, 3
+@bp.get("/reports/top-crop")
+def get_report_top_crop():
+    from flask import current_app, jsonify
+    from app.db.connection import execute_select
+    
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT TOP 1
+            ct.CropTypeName,
+            COUNT(od.OrderDetailID) AS OrderCount
+        FROM CropTypes ct
+        JOIN HarvestBatches hb ON ct.CropTypeID = hb.CropTypeID
+        JOIN OrderDetails od ON hb.BatchID = od.BatchID
+        GROUP BY ct.CropTypeName
+        ORDER BY OrderCount DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/inactive-farms")
+def get_report_inactive_farms():
+    from flask import current_app, jsonify
+    from app.db.connection import execute_select
+    
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT DISTINCT
+            f.FarmID,
+            f.FarmName
+        FROM Farms f
+        LEFT JOIN HarvestBatches hb 
+            ON f.FarmID = hb.FarmID
+            AND hb.HarvestDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        LEFT JOIN OrderDetails od
+            ON hb.BatchID = od.BatchID
+        WHERE hb.BatchID IS NULL
+           OR od.OrderDetailID IS NULL
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/top-driver")
+def get_report_top_driver():
+    from flask import current_app, jsonify
+    from app.db.connection import execute_select
+    
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT TOP 1
+            d.DriverID,
+            d.FirstName + ' ' + d.LastName AS DriverName,
+            COUNT(t.TripID) AS TripCount
+        FROM Drivers d
+        JOIN Trips t 
+            ON d.DriverID = t.DriverID
+        WHERE t.TripDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        GROUP BY d.DriverID, d.FirstName, d.LastName
+        ORDER BY TripCount DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+# @bp.get("/reports/inactive-restaurants")
+# def get_report_inactive_restaurants():
+#     pass
 
 
 @bp.get("/meta/routes")
