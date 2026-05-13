@@ -67,6 +67,24 @@ def execute_write(
         return {"rows_affected": rows_affected}
 
 
+def execute_insert_returning_int(
+    cfg: AppConfig,
+    sql: str,
+    params: Sequence[Any] | None = None,
+) -> dict[str, Any]:
+    """
+    INSERT that returns one row via OUTPUT (e.g. OUTPUT INSERTED.BatchID).
+    Returns `{ rows_affected: int, inserted_id: int | None }`.
+    """
+    with get_connection(cfg) as conn:
+        cur = conn.cursor()
+        cur.execute(sql, params or [])
+        row = cur.fetchone()
+        conn.commit()
+        inserted_id = int(row[0]) if row and row[0] is not None else None
+        return {"rows_affected": 1 if inserted_id is not None else 0, "inserted_id": inserted_id}
+
+
 def execute_many(
     cfg: AppConfig,
     sql: str,
