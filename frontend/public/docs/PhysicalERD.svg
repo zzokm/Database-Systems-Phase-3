@@ -5,7 +5,7 @@
    <polygon fill="#0080c0" points="336,193 333,180 339,180" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
    <polyline fill="none" points="148,65 148,164" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="148,164 145,150 151,150" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
-   <polyline fill="none" points="212,68 212,116 215,116 215,164" stroke="#0080c0" stroke-width="1"/>
+   <polyline fill="none" points="215,68 215,164" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="215,164 212,150 218,150" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
    <polyline fill="none" points="541,112 541,138" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="541,138 538,125 544,125" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
@@ -13,7 +13,7 @@
    <polygon fill="#0080c0" points="383,429 380,416 386,416" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
    <polyline fill="none" points="459,174 454,174 454,429" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="454,429 451,416 457,416" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
-   <polyline fill="none" points="542,210 542,307 539,307 539,398" stroke="#0080c0" stroke-width="1"/>
+   <polyline fill="none" points="539,210 539,398" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="539,398 536,385 542,385" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
    <polyline fill="none" points="840,98 840,273 749,273" stroke="#0080c0" stroke-width="1"/>
    <polygon fill="#0080c0" points="749,273 762,270 762,276" stroke="#0080c0" stroke-width="1" stroke-linejoin="miter"/>
