@@ -1,4 +1,4 @@
-USE MockFarmDB;
+USE FarmDB;
 Go
 
 -- INQUIRY 1: Max orders by crop type
