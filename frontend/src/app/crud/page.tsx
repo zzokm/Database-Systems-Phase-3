@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ArrowDown, ArrowUp, Check, ChevronDown, Loader2 } from "lucide-react";
 
+import { CrudSelectDropdown } from "@/components/crud-select-dropdown";
 import { DynamicDataTable } from "@/components/dynamic-data-table";
 import { SiteHeader } from "@/components/site-header";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -200,12 +201,52 @@ function serializeRequestError(e: unknown): unknown {
   return e;
 }
 
+function extractApiMessage(e: unknown): string {
+  if (e && typeof e === "object" && "data" in e) {
+    const data = (e as { data: unknown }).data;
+    if (data && typeof data === "object" && data !== null && "message" in data) {
+      const m = (data as { message: unknown }).message;
+      if (typeof m === "string" && m.trim()) return m;
+    }
+  }
+  if (e instanceof Error) return e.message;
+  return "Request failed";
+}
+
 function parseNumber(value: FormDataEntryValue | null, fieldName: string) {
   const n = Number(value);
   if (Number.isNaN(n)) {
     throw new Error(`Invalid number for ${fieldName}`);
   }
   return n;
+}
+
+/** Case-insensitive read for SQL/pyodbc row keys */
+function rowVal(row: Row | null | undefined, ...candidates: string[]): string {
+  if (!row || typeof row !== "object") return "";
+  const o = row as Record<string, unknown>;
+  for (const wanted of candidates) {
+    const wl = wanted.toLowerCase();
+    for (const key of Object.keys(o)) {
+      if (key.toLowerCase() === wl) {
+        const v = o[key];
+        if (v == null) return "";
+        return String(v);
+      }
+    }
+  }
+  return "";
+}
+
+function resultId(value: unknown, ...keys: string[]): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const o = value as Record<string, unknown>;
+  const wanted = new Set(keys.map((k) => k.toLowerCase()));
+  for (const [k, v] of Object.entries(o)) {
+    if (!wanted.has(k.toLowerCase())) continue;
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v);
+  }
+  return undefined;
 }
 
 export default function CrudPage() {
@@ -221,6 +262,33 @@ export default function CrudPage() {
   const [readSliceMode, setReadSliceMode] = React.useState<SliceMode>("all");
   const [readSliceCount, setReadSliceCount] = React.useState(10);
   const [readNonce, setReadNonce] = React.useState(0);
+
+  const [farmsInsert, setFarmsInsert] = React.useState<Row[]>([]);
+  const [cropsInsert, setCropsInsert] = React.useState<Row[]>([]);
+  const [insertLookupsLoading, setInsertLookupsLoading] = React.useState(false);
+  const [harvestFarmId, setHarvestFarmId] = React.useState("");
+  const [harvestCropTypeId, setHarvestCropTypeId] = React.useState("");
+  const [harvestIsAvailable, setHarvestIsAvailable] = React.useState("true");
+
+  const [restaurantRows, setRestaurantRows] = React.useState<Row[]>([]);
+  const [tripRows, setTripRows] = React.useState<Row[]>([]);
+  const [updateTablesLoading, setUpdateTablesLoading] = React.useState(false);
+  const [selectedRestaurantId, setSelectedRestaurantId] = React.useState<string>("");
+  const [selectedTripId, setSelectedTripId] = React.useState<string>("");
+
+  const [orderRows, setOrderRows] = React.useState<Row[]>([]);
+  const [batchRows, setBatchRows] = React.useState<Row[]>([]);
+  const [deleteListsLoading, setDeleteListsLoading] = React.useState(false);
+  const [selectedOrderId, setSelectedOrderId] = React.useState<string>("");
+  const [orderDetail, setOrderDetail] = React.useState<Row | null>(null);
+  const [orderDeleteConfirm, setOrderDeleteConfirm] = React.useState("");
+  const [selectedBatchId, setSelectedBatchId] = React.useState<string>("");
+  const [batchDeleteConfirm, setBatchDeleteConfirm] = React.useState("");
+
+  const [inlineErrors, setInlineErrors] = React.useState<Record<string, string>>({});
+
+  const [deliveryWindowDraft, setDeliveryWindowDraft] = React.useState("");
+  const [tripDistanceDraft, setTripDistanceDraft] = React.useState("");
 
   const [result, setResult] = React.useState<unknown>(null);
   const [error, setError] = React.useState<unknown>(null);
@@ -266,6 +334,204 @@ export default function CrudPage() {
     };
   }, [mainTab, readLookup, readLookupMeta.path, readNonce]);
 
+  React.useEffect(() => {
+    if (mainTab !== "insert") return;
+    let cancelled = false;
+    (async () => {
+      setInsertLookupsLoading(true);
+      try {
+        const [fa, cr] = await Promise.all([
+          getLookup("/api/farms"),
+          getLookup("/api/crop-types"),
+        ]);
+        if (cancelled) return;
+        setFarmsInsert(fa.rows);
+        setCropsInsert(cr.rows);
+      } catch {
+        if (!cancelled) {
+          setFarmsInsert([]);
+          setCropsInsert([]);
+        }
+      } finally {
+        if (!cancelled) setInsertLookupsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mainTab]);
+
+  React.useEffect(() => {
+    if (mainTab !== "update") return;
+    let cancelled = false;
+    (async () => {
+      setUpdateTablesLoading(true);
+      try {
+        const [rest, trips] = await Promise.all([
+          getLookup("/api/restaurants"),
+          getLookup("/api/trips"),
+        ]);
+        if (cancelled) return;
+        setRestaurantRows(rest.rows);
+        setTripRows(trips.rows);
+      } catch {
+        if (!cancelled) {
+          setRestaurantRows([]);
+          setTripRows([]);
+        }
+      } finally {
+        if (!cancelled) setUpdateTablesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mainTab]);
+
+  React.useEffect(() => {
+    if (mainTab !== "delete") return;
+    let cancelled = false;
+    (async () => {
+      setDeleteListsLoading(true);
+      try {
+        const [orders, batches] = await Promise.all([
+          getLookup("/api/orders"),
+          getLookup("/api/harvest-batches?available=1"),
+        ]);
+        if (cancelled) return;
+        setOrderRows(orders.rows);
+        setBatchRows(batches.rows);
+      } catch {
+        if (!cancelled) {
+          setOrderRows([]);
+          setBatchRows([]);
+        }
+      } finally {
+        if (!cancelled) setDeleteListsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mainTab]);
+
+  React.useEffect(() => {
+    setOrderDeleteConfirm("");
+    if (!selectedOrderId) {
+      setOrderDetail(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchWithTimeout(
+          `${API_BASE}/api/orders/${encodeURIComponent(selectedOrderId)}`
+        );
+        const text = await res.text();
+        const data = text ? safeJson(text) : null;
+        if (cancelled) return;
+        if (!res.ok) {
+          setOrderDetail(null);
+          return;
+        }
+        const row = (data as { row?: Row } | null)?.row;
+        setOrderDetail(row && typeof row === "object" ? row : null);
+      } catch {
+        if (!cancelled) setOrderDetail(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedOrderId]);
+
+  React.useEffect(() => {
+    setBatchDeleteConfirm("");
+  }, [selectedBatchId]);
+
+  const selectedRestaurant = React.useMemo(
+    () =>
+      restaurantRows.find((r) => rowVal(r, "RestaurantID") === selectedRestaurantId),
+    [restaurantRows, selectedRestaurantId]
+  );
+
+  const selectedTrip = React.useMemo(
+    () => tripRows.find((r) => rowVal(r, "TripID") === selectedTripId),
+    [tripRows, selectedTripId]
+  );
+
+  React.useEffect(() => {
+    if (selectedRestaurant) {
+      setDeliveryWindowDraft(rowVal(selectedRestaurant, "PreferredDeliveryWindow"));
+    } else {
+      setDeliveryWindowDraft("");
+    }
+  }, [selectedRestaurant]);
+
+  React.useEffect(() => {
+    if (selectedTrip) {
+      setTripDistanceDraft(rowVal(selectedTrip, "TotalDistanceKM"));
+    } else {
+      setTripDistanceDraft("");
+    }
+  }, [selectedTrip]);
+
+  const farmInsertOptions = React.useMemo(
+    () =>
+      farmsInsert.map((row) => {
+        const id = rowVal(row, "FarmID");
+        return {
+          value: id,
+          label: `${rowVal(row, "FarmName")} (${id}) — ${rowVal(row, "Location")}`,
+        };
+      }),
+    [farmsInsert]
+  );
+
+  const cropInsertOptions = React.useMemo(
+    () =>
+      cropsInsert.map((row) => {
+        const id = rowVal(row, "CropTypeID");
+        return {
+          value: id,
+          label: `${rowVal(row, "CropTypeName")} (${id})`,
+        };
+      }),
+    [cropsInsert]
+  );
+
+  const harvestAvailabilityOptions = React.useMemo(
+    () => [
+      { value: "true", label: "Yes" },
+      { value: "false", label: "No" },
+    ],
+    []
+  );
+
+  const orderDeleteOptions = React.useMemo(
+    () =>
+      orderRows.map((row) => {
+        const oid = rowVal(row, "OrderID");
+        return {
+          value: oid,
+          label: `${oid} — ${rowVal(row, "RestaurantName")} (${rowVal(row, "OrderDate")})`,
+        };
+      }),
+    [orderRows]
+  );
+
+  const batchDeleteOptions = React.useMemo(
+    () =>
+      batchRows.map((row) => {
+        const bid = rowVal(row, "BatchID");
+        return {
+          value: bid,
+          label: `${bid} — ${rowVal(row, "FarmName")} / ${rowVal(row, "CropTypeName")} (${rowVal(row, "HarvestDate")})`,
+        };
+      }),
+    [batchRows]
+  );
+
   const readDisplayRows = React.useMemo(
     () =>
       applyTableView(readRows, {
@@ -279,15 +545,29 @@ export default function CrudPage() {
 
   const readTableColumns = React.useMemo(() => columnKeys(readRows), [readRows]);
 
-  async function run<T>(fn: () => Promise<T>) {
+  async function run<T>(fn: () => Promise<T>, opts?: { inlineErrorKey?: string }) {
+    const inlineKey = opts?.inlineErrorKey;
     setBusy(true);
     setResult(null);
     setError(null);
+    if (inlineKey) {
+      setInlineErrors((prev) => {
+        const next = { ...prev };
+        delete next[inlineKey];
+        return next;
+      });
+    }
     try {
       const data = await fn();
       setResult(data);
     } catch (e) {
       setError(e);
+      if (inlineKey) {
+        setInlineErrors((prev) => ({
+          ...prev,
+          [inlineKey]: extractApiMessage(e),
+        }));
+      }
     } finally {
       setBusy(false);
     }
@@ -330,37 +610,91 @@ export default function CrudPage() {
                     onSubmit={(e) => {
                       e.preventDefault();
                       const fd = new FormData(e.currentTarget);
-                      run(() =>
-                        postJson("/api/harvest-batches", {
-                          FarmID: parseNumber(fd.get("farm_id"), "FarmID"),
-                          CropTypeID: parseNumber(fd.get("crop_type_id"), "CropTypeID"),
-                          HarvestDate: String(fd.get("harvest_date")),
-                          AvailableQuantityKG: parseNumber(
-                            fd.get("available_quantity_kg"),
-                            "AvailableQuantityKG"
-                          ),
-                          PricePerKG: parseNumber(fd.get("price_per_kg"), "PricePerKG"),
-                          IsAvailable: String(fd.get("is_available")) === "true",
-                        })
+                      const farmRaw = harvestFarmId;
+                      const cropRaw = harvestCropTypeId;
+                      if (!farmRaw || String(farmRaw).trim() === "") {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          harvest: "Choose a farm from the list.",
+                        }));
+                        return;
+                      }
+                      if (!cropRaw || String(cropRaw).trim() === "") {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          harvest: "Choose a crop type from the list.",
+                        }));
+                        return;
+                      }
+                      let qty: number;
+                      let price: number;
+                      try {
+                        qty = parseNumber(fd.get("available_quantity_kg"), "AvailableQuantityKG");
+                        price = parseNumber(fd.get("price_per_kg"), "PricePerKG");
+                      } catch (err) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          harvest: err instanceof Error ? err.message : "Invalid number.",
+                        }));
+                        return;
+                      }
+                      if (qty <= 0 || price <= 0) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          harvest: "Quantity and price must be greater than zero.",
+                        }));
+                        return;
+                      }
+                      run(
+                        () =>
+                          postJson("/api/harvest-batches", {
+                            FarmID: Number(farmRaw),
+                            CropTypeID: Number(cropRaw),
+                            HarvestDate: String(fd.get("harvest_date")),
+                            AvailableQuantityKG: qty,
+                            PricePerKG: price,
+                            IsAvailable: harvestIsAvailable === "true",
+                          }),
+                        { inlineErrorKey: "harvest" }
                       );
                     }}
                   >
+                    {insertLookupsLoading ? (
+                      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="size-4 animate-spin" />
+                        Loading farms and crop types…
+                      </p>
+                    ) : null}
                     <div className="grid gap-1.5">
-                      <Label htmlFor="farm_id">Farm ID</Label>
-                      <Input id="farm_id" name="farm_id" placeholder="1" required />
+                      <Label htmlFor="farm_id">Farm</Label>
+                      <CrudSelectDropdown
+                        id="farm_id"
+                        value={harvestFarmId}
+                        onValueChange={setHarvestFarmId}
+                        options={farmInsertOptions}
+                        placeholder="Choose a farm…"
+                        disabled={busy || insertLookupsLoading || farmsInsert.length === 0}
+                        emptyLabel="No farms loaded"
+                      />
                     </div>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="crop_type_id">Crop Type ID</Label>
-                      <Input
+                      <Label htmlFor="crop_type_id">Crop type</Label>
+                      <CrudSelectDropdown
                         id="crop_type_id"
-                        name="crop_type_id"
-                        placeholder="3"
-                        required
+                        value={harvestCropTypeId}
+                        onValueChange={setHarvestCropTypeId}
+                        options={cropInsertOptions}
+                        placeholder="Choose a crop type…"
+                        disabled={busy || insertLookupsLoading || cropsInsert.length === 0}
+                        emptyLabel="No crop types loaded"
                       />
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="harvest_date">Harvest Date</Label>
                       <Input id="harvest_date" name="harvest_date" type="date" required />
+                      <p className="text-xs text-muted-foreground">
+                        Use a real calendar date; the API rejects impossible future dates.
+                      </p>
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="available_quantity_kg">Available Quantity (KG)</Label>
@@ -388,17 +722,29 @@ export default function CrudPage() {
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="is_available">Is Available</Label>
-                      <select
+                      <CrudSelectDropdown
                         id="is_available"
-                        name="is_available"
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        defaultValue="true"
-                      >
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                      </select>
+                        value={harvestIsAvailable}
+                        onValueChange={setHarvestIsAvailable}
+                        options={harvestAvailabilityOptions}
+                        placeholder="Is available"
+                        disabled={busy}
+                      />
                     </div>
-                    <Button type="submit" disabled={busy}>
+                    {inlineErrors.harvest ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.harvest}
+                      </p>
+                    ) : null}
+                    <Button
+                      type="submit"
+                      disabled={
+                        busy ||
+                        insertLookupsLoading ||
+                        farmsInsert.length === 0 ||
+                        cropsInsert.length === 0
+                      }
+                    >
                       Submit
                     </Button>
                   </form>
@@ -415,27 +761,80 @@ export default function CrudPage() {
                     onSubmit={(e) => {
                       e.preventDefault();
                       const fd = new FormData(e.currentTarget);
-                      run(() =>
-                        postJson("/api/drivers", {
-                          FirstName: String(fd.get("first_name")),
-                          LastName: String(fd.get("last_name")),
-                          Phone: String(fd.get("phone") || ""),
-                        })
+                      const first = String(fd.get("first_name") ?? "").trim();
+                      const last = String(fd.get("last_name") ?? "").trim();
+                      const phone = String(fd.get("phone") ?? "").trim();
+                      if (!first || !last || !phone) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          driver: "First name, last name, and phone are required.",
+                        }));
+                        return;
+                      }
+                      if (first.length > 50 || last.length > 50) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          driver: "Names must be at most 50 characters.",
+                        }));
+                        return;
+                      }
+                      if (phone.length > 20) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          driver: "Phone must be at most 20 characters.",
+                        }));
+                        return;
+                      }
+                      run(
+                        () =>
+                          postJson("/api/drivers", {
+                            FirstName: first,
+                            LastName: last,
+                            Phone: phone,
+                          }),
+                        { inlineErrorKey: "driver" }
                       );
                     }}
                   >
                     <div className="grid gap-1.5">
                       <Label htmlFor="first_name">First Name</Label>
-                      <Input id="first_name" name="first_name" placeholder="Ahmed" required />
+                      <Input
+                        id="first_name"
+                        name="first_name"
+                        placeholder="Ahmed"
+                        required
+                        maxLength={50}
+                      />
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="last_name">Last Name</Label>
-                      <Input id="last_name" name="last_name" placeholder="Hassan" required />
+                      <Input
+                        id="last_name"
+                        name="last_name"
+                        placeholder="Hassan"
+                        required
+                        maxLength={50}
+                      />
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="phone">Phone</Label>
-                      <Input id="phone" name="phone" placeholder="0100..." />
+                      <Input
+                        id="phone"
+                        name="phone"
+                        placeholder="01001234567"
+                        required
+                        maxLength={20}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Required for this API. Duplicate phone or same first and last name as an
+                        existing driver returns HTTP 409.
+                      </p>
                     </div>
+                    {inlineErrors.driver ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.driver}
+                      </p>
+                    ) : null}
                     <Button type="submit" disabled={busy}>
                       Submit
                     </Button>
@@ -446,42 +845,107 @@ export default function CrudPage() {
           </TabsContent>
 
           <TabsContent value="update" className="mt-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Update Restaurant Delivery Window</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Pick a row from the table, adjust the delivery window, then submit. The API
+                    only updates{" "}
+                    <code className="rounded bg-muted px-1 py-0.5 text-xs">
+                      PreferredDeliveryWindow
+                    </code>
+                    .
+                  </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {updateTablesLoading ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading restaurants…
+                    </p>
+                  ) : null}
+                  <DynamicDataTable
+                    rows={restaurantRows}
+                    onRowClick={(r) => setSelectedRestaurantId(rowVal(r, "RestaurantID"))}
+                    isRowSelected={(r) => rowVal(r, "RestaurantID") === selectedRestaurantId}
+                  />
+                  {selectedRestaurant ? (
+                    <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                      <p className="font-medium">Selected restaurant</p>
+                      <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                        <div>
+                          <dt className="inline font-medium text-foreground">ID: </dt>
+                          <dd className="inline font-mono">{selectedRestaurantId}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Name: </dt>
+                          <dd className="inline">{rowVal(selectedRestaurant, "RestaurantName")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">City: </dt>
+                          <dd className="inline">{rowVal(selectedRestaurant, "City")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Current window: </dt>
+                          <dd className="inline font-mono">
+                            {rowVal(selectedRestaurant, "PreferredDeliveryWindow") || "—"}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Click a row in the table above to choose a restaurant.
+                    </p>
+                  )}
                   <form
                     className="grid gap-3"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      const restaurantId = String(fd.get("restaurant_id"));
-                      run(() =>
-                        putJson(`/api/restaurants/${encodeURIComponent(restaurantId)}/delivery-window`, {
-                          PreferredDeliveryWindow: String(
-                            fd.get("preferred_delivery_window")
-                          ).trim(),
-                        })
+                      if (!selectedRestaurantId.trim()) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          updateRestaurant: "Select a restaurant from the table first.",
+                        }));
+                        return;
+                      }
+                      const w = deliveryWindowDraft.trim();
+                      if (!w) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          updateRestaurant: "Preferred delivery window cannot be empty.",
+                        }));
+                        return;
+                      }
+                      run(
+                        () =>
+                          putJson(
+                            `/api/restaurants/${encodeURIComponent(selectedRestaurantId)}/delivery-window`,
+                            { PreferredDeliveryWindow: w }
+                          ),
+                        { inlineErrorKey: "updateRestaurant" }
                       );
                     }}
                   >
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="restaurant_id">Restaurant ID</Label>
-                      <Input id="restaurant_id" name="restaurant_id" placeholder="5" required />
-                    </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="preferred_delivery_window">Preferred Delivery Window</Label>
                       <Input
                         id="preferred_delivery_window"
                         name="preferred_delivery_window"
                         placeholder="10:00-14:00"
+                        value={deliveryWindowDraft}
+                        onChange={(e) => setDeliveryWindowDraft(e.target.value)}
                         required
                       />
                     </div>
-                    <Button type="submit" disabled={busy}>
-                      Submit
+                    {inlineErrors.updateRestaurant ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.updateRestaurant}
+                      </p>
+                    ) : null}
+                    <Button type="submit" disabled={busy || !selectedRestaurantId}>
+                      Submit update
                     </Button>
                   </form>
                 </CardContent>
@@ -490,28 +954,73 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Update Trip Distance</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Pick a trip row, edit total distance (kilometres, zero or more), then submit.
+                  </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {updateTablesLoading ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading trips…
+                    </p>
+                  ) : null}
+                  <DynamicDataTable
+                    rows={tripRows}
+                    onRowClick={(r) => setSelectedTripId(rowVal(r, "TripID"))}
+                    isRowSelected={(r) => rowVal(r, "TripID") === selectedTripId}
+                  />
+                  {selectedTrip ? (
+                    <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                      <p className="font-medium">Selected trip</p>
+                      <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                        <div>
+                          <dt className="inline font-medium text-foreground">TripID: </dt>
+                          <dd className="inline font-mono">{selectedTripId}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Driver: </dt>
+                          <dd className="inline">{rowVal(selectedTrip, "DriverName")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Date: </dt>
+                          <dd className="inline font-mono">{rowVal(selectedTrip, "TripDate")}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Click a row in the table above to choose a trip.
+                    </p>
+                  )}
                   <form
                     className="grid gap-3"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      const tripId = String(fd.get("trip_id"));
-                      run(() =>
-                        putJson(`/api/trips/${encodeURIComponent(tripId)}/route`, {
-                          TotalDistanceKM: parseNumber(
-                            fd.get("total_distance_km"),
-                            "TotalDistanceKM"
-                          ),
-                        })
+                      if (!selectedTripId.trim()) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          updateTrip: "Select a trip from the table first.",
+                        }));
+                        return;
+                      }
+                      const dist = Number(tripDistanceDraft);
+                      if (Number.isNaN(dist) || dist < 0) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          updateTrip: "Total distance must be a number greater than or equal to 0.",
+                        }));
+                        return;
+                      }
+                      run(
+                        () =>
+                          putJson(`/api/trips/${encodeURIComponent(selectedTripId)}/route`, {
+                            TotalDistanceKM: dist,
+                          }),
+                        { inlineErrorKey: "updateTrip" }
                       );
                     }}
                   >
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="trip_id">Trip ID</Label>
-                      <Input id="trip_id" name="trip_id" placeholder="12" required />
-                    </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="total_distance_km">Total Distance (KM)</Label>
                       <Input
@@ -521,11 +1030,18 @@ export default function CrudPage() {
                         min={0}
                         step="0.01"
                         placeholder="42.5"
+                        value={tripDistanceDraft}
+                        onChange={(e) => setTripDistanceDraft(e.target.value)}
                         required
                       />
                     </div>
-                    <Button type="submit" disabled={busy}>
-                      Submit
+                    {inlineErrors.updateTrip ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.updateTrip}
+                      </p>
+                    ) : null}
+                    <Button type="submit" disabled={busy || !selectedTripId}>
+                      Submit update
                     </Button>
                   </form>
                 </CardContent>
@@ -534,27 +1050,116 @@ export default function CrudPage() {
           </TabsContent>
 
           <TabsContent value="delete" className="mt-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Delete Order</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Choose an order, confirm by typing its Order ID, then delete. This cannot be
+                    undone.
+                  </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {deleteListsLoading ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading orders…
+                    </p>
+                  ) : null}
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="delete_order_select">Order</Label>
+                    <CrudSelectDropdown
+                      id="delete_order_select"
+                      value={selectedOrderId}
+                      onValueChange={setSelectedOrderId}
+                      options={orderDeleteOptions}
+                      placeholder="Select an order…"
+                      disabled={busy || deleteListsLoading || orderRows.length === 0}
+                      emptyLabel="No orders loaded"
+                    />
+                  </div>
+                  {orderDetail ? (
+                    <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                      <p className="font-medium">Preflight (GET /api/orders/…)</p>
+                      <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                        <div>
+                          <dt className="inline font-medium text-foreground">OrderID: </dt>
+                          <dd className="inline font-mono">{rowVal(orderDetail, "OrderID")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Restaurant: </dt>
+                          <dd className="inline">{rowVal(orderDetail, "RestaurantName")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">City: </dt>
+                          <dd className="inline">{rowVal(orderDetail, "City")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Order date: </dt>
+                          <dd className="inline font-mono">{rowVal(orderDetail, "OrderDate")}</dd>
+                        </div>
+                        <div>
+                          <dt className="inline font-medium text-foreground">Status: </dt>
+                          <dd className="inline">{rowVal(orderDetail, "Status")}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  ) : selectedOrderId ? (
+                    <p className="text-sm text-muted-foreground">
+                      Loading order details or order not found.
+                    </p>
+                  ) : null}
                   <form
                     className="grid gap-3"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      const orderId = String(fd.get("order_id"));
-                      run(() => del(`/api/orders/${encodeURIComponent(orderId)}`));
+                      if (!selectedOrderId) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          deleteOrder: "Select an order from the list.",
+                        }));
+                        return;
+                      }
+                      if (orderDeleteConfirm.trim() !== selectedOrderId) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          deleteOrder: `Type the Order ID exactly (${selectedOrderId}) to confirm.`,
+                        }));
+                        return;
+                      }
+                      run(
+                        () => del(`/api/orders/${encodeURIComponent(selectedOrderId)}`),
+                        { inlineErrorKey: "deleteOrder" }
+                      );
                     }}
                   >
                     <div className="grid gap-1.5">
-                      <Label htmlFor="order_id">Order ID</Label>
-                      <Input id="order_id" name="order_id" placeholder="1001" required />
+                      <Label htmlFor="order_delete_confirm">Confirm Order ID</Label>
+                      <Input
+                        id="order_delete_confirm"
+                        name="order_delete_confirm"
+                        placeholder="Type Order ID to confirm"
+                        value={orderDeleteConfirm}
+                        onChange={(e) => setOrderDeleteConfirm(e.target.value)}
+                        autoComplete="off"
+                        aria-invalid={orderDeleteConfirm !== selectedOrderId && orderDeleteConfirm.length > 0}
+                      />
                     </div>
-                    <Button type="submit" variant="destructive" disabled={busy}>
-                      Delete
+                    {inlineErrors.deleteOrder ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.deleteOrder}
+                      </p>
+                    ) : null}
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      disabled={
+                        busy ||
+                        !selectedOrderId ||
+                        orderDeleteConfirm.trim() !== selectedOrderId
+                      }
+                    >
+                      Delete order
                     </Button>
                   </form>
                 </CardContent>
@@ -563,23 +1168,115 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Remove Harvest Batch</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    The server only deletes batches where{" "}
+                    <code className="rounded bg-muted px-1 py-0.5 text-xs">IsAvailable = 1</code>.
+                    The picker is limited to those rows so an invalid ID is unlikely.
+                  </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
+                  {deleteListsLoading ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading eligible batches…
+                    </p>
+                  ) : null}
+                  <div className="grid gap-1.5">
+                    <Label htmlFor="delete_batch_select">Available batch</Label>
+                    <CrudSelectDropdown
+                      id="delete_batch_select"
+                      value={selectedBatchId}
+                      onValueChange={setSelectedBatchId}
+                      options={batchDeleteOptions}
+                      placeholder="Select a batch…"
+                      disabled={busy || deleteListsLoading || batchRows.length === 0}
+                      emptyLabel="No eligible batches"
+                    />
+                  </div>
+                  {selectedBatchId ? (
+                    <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                      {(() => {
+                        const row = batchRows.find((r) => rowVal(r, "BatchID") === selectedBatchId);
+                        if (!row) return null;
+                        return (
+                          <>
+                            <p className="font-medium">Selected batch</p>
+                            <dl className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                              <div>
+                                <dt className="inline font-medium text-foreground">BatchID: </dt>
+                                <dd className="inline font-mono">{rowVal(row, "BatchID")}</dd>
+                              </div>
+                              <div>
+                                <dt className="inline font-medium text-foreground">Farm: </dt>
+                                <dd className="inline">{rowVal(row, "FarmName")}</dd>
+                              </div>
+                              <div>
+                                <dt className="inline font-medium text-foreground">Crop: </dt>
+                                <dd className="inline">{rowVal(row, "CropTypeName")}</dd>
+                              </div>
+                              <div>
+                                <dt className="inline font-medium text-foreground">Available: </dt>
+                                <dd className="inline">{rowVal(row, "IsAvailable")}</dd>
+                              </div>
+                            </dl>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  ) : null}
                   <form
                     className="grid gap-3"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      const batchId = String(fd.get("batch_id"));
-                      run(() => del(`/api/harvest-batches/${encodeURIComponent(batchId)}`));
+                      if (!selectedBatchId) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          deleteBatch: "Select a batch from the list.",
+                        }));
+                        return;
+                      }
+                      if (batchDeleteConfirm.trim() !== selectedBatchId) {
+                        setInlineErrors((p) => ({
+                          ...p,
+                          deleteBatch: `Type the Batch ID exactly (${selectedBatchId}) to confirm.`,
+                        }));
+                        return;
+                      }
+                      run(
+                        () => del(`/api/harvest-batches/${encodeURIComponent(selectedBatchId)}`),
+                        { inlineErrorKey: "deleteBatch" }
+                      );
                     }}
                   >
                     <div className="grid gap-1.5">
-                      <Label htmlFor="batch_id">Batch ID</Label>
-                      <Input id="batch_id" name="batch_id" placeholder="77" required />
+                      <Label htmlFor="batch_delete_confirm">Confirm Batch ID</Label>
+                      <Input
+                        id="batch_delete_confirm"
+                        name="batch_delete_confirm"
+                        placeholder="Type Batch ID to confirm"
+                        value={batchDeleteConfirm}
+                        onChange={(e) => setBatchDeleteConfirm(e.target.value)}
+                        autoComplete="off"
+                        aria-invalid={
+                          batchDeleteConfirm !== selectedBatchId && batchDeleteConfirm.length > 0
+                        }
+                      />
                     </div>
-                    <Button type="submit" variant="destructive" disabled={busy}>
-                      Delete
+                    {inlineErrors.deleteBatch ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {inlineErrors.deleteBatch}
+                      </p>
+                    ) : null}
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      disabled={
+                        busy ||
+                        !selectedBatchId ||
+                        batchDeleteConfirm.trim() !== selectedBatchId
+                      }
+                    >
+                      Remove batch
                     </Button>
                   </form>
                 </CardContent>
@@ -808,6 +1505,28 @@ export default function CrudPage() {
               ) : (
                 <>
                   <div className="text-sm font-medium">Success</div>
+                  {resultId(result, "BatchID") || resultId(result, "DriverID") ? (
+                    <p className="mb-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm">
+                      Assigned identifiers:{" "}
+                      {resultId(result, "BatchID") ? (
+                        <>
+                          BatchID{" "}
+                          <span className="font-mono font-semibold">
+                            {resultId(result, "BatchID")}
+                          </span>
+                        </>
+                      ) : null}
+                      {resultId(result, "BatchID") && resultId(result, "DriverID") ? " · " : null}
+                      {resultId(result, "DriverID") ? (
+                        <>
+                          DriverID{" "}
+                          <span className="font-mono font-semibold">
+                            {resultId(result, "DriverID")}
+                          </span>
+                        </>
+                      ) : null}
+                    </p>
+                  ) : null}
                   <JsonBox value={result} />
                 </>
               )}
