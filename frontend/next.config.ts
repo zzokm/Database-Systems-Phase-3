@@ -6,7 +6,8 @@ import dotenv from "dotenv";
 dotenv.config({ path: path.resolve(process.cwd(), "..", ".env") });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Smaller Docker images: trace only server deps into `.next/standalone` (see frontend/Dockerfile).
+  output: "standalone",
 };
 
 export default nextConfig;

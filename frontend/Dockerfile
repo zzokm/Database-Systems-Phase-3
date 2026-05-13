@@ -15,22 +15,17 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV HOME=/home/nextjs
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 
-# Run as non-root
-RUN addgroup -S nextjs && adduser -S nextjs -G nextjs \
-  && chown -R nextjs:nextjs /app \
-  && mkdir -p /home/nextjs \
-  && chown -R nextjs:nextjs /home/nextjs
+# Standalone trace: avoid copying full node_modules + chown -R (slow / OOM on small builders).
+COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 
 USER nextjs
 
 EXPOSE 3000
-# Listen on all interfaces (required for Docker / reverse proxies)
-CMD ["npm", "run", "start", "--", "--hostname", "0.0.0.0", "--port", "3000"]
-
+CMD ["node", "server.js"]
