@@ -483,9 +483,12 @@ export default function CrudPage() {
     () =>
       farmsInsert.map((row) => {
         const id = rowVal(row, "FarmID");
+        const name = rowVal(row, "FarmName");
+        const loc = rowVal(row, "Location");
+        const label = loc ? `${name}, ${loc}` : name;
         return {
           value: id,
-          label: `${rowVal(row, "FarmName")} (${id}) — ${rowVal(row, "Location")}`,
+          label,
         };
       }),
     [farmsInsert]
@@ -497,7 +500,7 @@ export default function CrudPage() {
         const id = rowVal(row, "CropTypeID");
         return {
           value: id,
-          label: `${rowVal(row, "CropTypeName")} (${id})`,
+          label: rowVal(row, "CropTypeName"),
         };
       }),
     [cropsInsert]
@@ -517,7 +520,7 @@ export default function CrudPage() {
         const oid = rowVal(row, "OrderID");
         return {
           value: oid,
-          label: `${oid} — ${rowVal(row, "RestaurantName")} (${rowVal(row, "OrderDate")})`,
+          label: `${oid}, ${rowVal(row, "RestaurantName")} (${rowVal(row, "OrderDate")})`,
         };
       }),
     [orderRows]
@@ -529,7 +532,7 @@ export default function CrudPage() {
         const bid = rowVal(row, "BatchID");
         return {
           value: bid,
-          label: `${bid} — ${rowVal(row, "FarmName")} / ${rowVal(row, "CropTypeName")} (${rowVal(row, "HarvestDate")})`,
+          label: `${bid}, ${rowVal(row, "FarmName")} / ${rowVal(row, "CropTypeName")} (${rowVal(row, "HarvestDate")})`,
         };
       }),
     [batchRows]
@@ -898,7 +901,7 @@ export default function CrudPage() {
                         <div>
                           <dt className="inline font-medium text-foreground">Current window: </dt>
                           <dd className="inline font-mono">
-                            {rowVal(selectedRestaurant, "PreferredDeliveryWindow") || "—"}
+                            {rowVal(selectedRestaurant, "PreferredDeliveryWindow") || "-"}
                           </dd>
                         </div>
                       </dl>
