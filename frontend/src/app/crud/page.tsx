@@ -7,7 +7,15 @@ import { CrudSelectDropdown } from "@/components/crud-select-dropdown";
 import { DynamicDataTable } from "@/components/dynamic-data-table";
 import { SiteHeader } from "@/components/site-header";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { SqlPeekButton } from "@/components/sql-peek-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +35,8 @@ import {
   SLICE_MODE_LABEL,
   type SliceMode,
 } from "@/lib/table-view";
+import { SqlPanel } from "@/components/sql-panel";
+import { sqlExecutedText } from "@/lib/sql-executed";
 import { cn } from "@/lib/utils";
 
 const FETCH_TIMEOUT_MS = 30_000;
@@ -238,6 +248,14 @@ function rowVal(row: Row | null | undefined, ...candidates: string[]): string {
   return "";
 }
 
+type SqlScope =
+  | "insertHarvest"
+  | "insertDriver"
+  | "updateRestaurant"
+  | "updateTrip"
+  | "deleteOrder"
+  | "deleteBatch";
+
 function resultId(value: unknown, ...keys: string[]): string | undefined {
   if (!value || typeof value !== "object") return undefined;
   const o = value as Record<string, unknown>;
@@ -257,6 +275,7 @@ export default function CrudPage() {
   const [readError, setReadError] = React.useState<unknown>(null);
   const [readLoading, setReadLoading] = React.useState(false);
   const [readJsonOpen, setReadJsonOpen] = React.useState(false);
+  const [readSqlOpen, setReadSqlOpen] = React.useState(false);
   const [readSortColumn, setReadSortColumn] = React.useState("");
   const [readSortDir, setReadSortDir] = React.useState<"asc" | "desc">("asc");
   const [readSliceMode, setReadSliceMode] = React.useState<SliceMode>("all");
@@ -294,6 +313,12 @@ export default function CrudPage() {
   const [result, setResult] = React.useState<unknown>(null);
   const [error, setError] = React.useState<unknown>(null);
   const [busy, setBusy] = React.useState(false);
+  const [sectionSql, setSectionSql] = React.useState<
+    Partial<Record<SqlScope, string | null>>
+  >({});
+  const [orderPreflightSql, setOrderPreflightSql] = React.useState<string | null>(
+    null
+  );
 
   const readLookupMeta = React.useMemo(
     () => LOOKUPS.find((l) => l.id === readLookup) ?? LOOKUPS[0],
@@ -309,6 +334,7 @@ export default function CrudPage() {
       setReadRaw(null);
       setReadError(null);
       setReadJsonOpen(false);
+      setReadSqlOpen(false);
       try {
         const r = await getLookup(readLookupMeta.path);
         if (cancelled) return;
@@ -420,6 +446,7 @@ export default function CrudPage() {
 
   React.useEffect(() => {
     setOrderDeleteConfirm("");
+    setOrderPreflightSql(null);
     if (!selectedOrderId) {
       setOrderDetail(null);
       return;
@@ -435,12 +462,17 @@ export default function CrudPage() {
         if (cancelled) return;
         if (!res.ok) {
           setOrderDetail(null);
+          setOrderPreflightSql(sqlExecutedText(data));
           return;
         }
         const row = (data as { row?: Row } | null)?.row;
         setOrderDetail(row && typeof row === "object" ? row : null);
+        setOrderPreflightSql(sqlExecutedText(data));
       } catch {
-        if (!cancelled) setOrderDetail(null);
+        if (!cancelled) {
+          setOrderDetail(null);
+          setOrderPreflightSql(null);
+        }
       }
     })();
     return () => {
@@ -551,8 +583,21 @@ export default function CrudPage() {
 
   const readTableColumns = React.useMemo(() => columnKeys(readRows), [readRows]);
 
-  async function run<T>(fn: () => Promise<T>, opts?: { inlineErrorKey?: string }) {
+  const deleteOrderSqlPanel = React.useMemo(() => {
+    const parts = [orderPreflightSql, sectionSql.deleteOrder].filter(
+      (s): s is string => Boolean(s && String(s).trim())
+    );
+    return parts.length
+      ? parts.join("\n\n/* --- next request --- */\n\n")
+      : null;
+  }, [orderPreflightSql, sectionSql.deleteOrder]);
+
+  async function run<T>(
+    fn: () => Promise<T>,
+    opts?: { inlineErrorKey?: string; sqlScope?: SqlScope }
+  ) {
     const inlineKey = opts?.inlineErrorKey;
+    const sqlScope = opts?.sqlScope;
     setBusy(true);
     setResult(null);
     setError(null);
@@ -566,8 +611,17 @@ export default function CrudPage() {
     try {
       const data = await fn();
       setResult(data);
+      const t = sqlExecutedText(data);
+      if (sqlScope && t) {
+        setSectionSql((prev) => ({ ...prev, [sqlScope]: t }));
+      }
     } catch (e) {
       setError(e);
+      const ex = e as Error & { data?: unknown };
+      const t = sqlExecutedText(ex.data);
+      if (sqlScope && t) {
+        setSectionSql((prev) => ({ ...prev, [sqlScope]: t }));
+      }
       if (inlineKey) {
         setInlineErrors((prev) => ({
           ...prev,
@@ -609,6 +663,9 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Add Harvest Batch</CardTitle>
+                  <CardAction>
+                    <SqlPeekButton sql={sectionSql.insertHarvest ?? null} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -661,7 +718,7 @@ export default function CrudPage() {
                             PricePerKG: price,
                             IsAvailable: harvestIsAvailable === "true",
                           }),
-                        { inlineErrorKey: "harvest" }
+                        { inlineErrorKey: "harvest", sqlScope: "insertHarvest" }
                       );
                     }}
                   >
@@ -770,6 +827,9 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Add Driver</CardTitle>
+                  <CardAction>
+                    <SqlPeekButton sql={sectionSql.insertDriver ?? null} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent>
                   <form
@@ -808,7 +868,7 @@ export default function CrudPage() {
                             LastName: last,
                             Phone: phone,
                           }),
-                        { inlineErrorKey: "driver" }
+                        { inlineErrorKey: "driver", sqlScope: "insertDriver" }
                       );
                     }}
                   >
@@ -861,14 +921,17 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Update Restaurant Delivery Window</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <CardDescription>
                     Pick a row from the table, adjust the delivery window, then submit. The API
                     only updates{" "}
                     <code className="rounded bg-muted px-1 py-0.5 text-xs">
                       PreferredDeliveryWindow
                     </code>
                     .
-                  </p>
+                  </CardDescription>
+                  <CardAction>
+                    <SqlPeekButton sql={sectionSql.updateRestaurant ?? null} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {updateTablesLoading ? (
@@ -936,7 +999,7 @@ export default function CrudPage() {
                             `/api/restaurants/${encodeURIComponent(selectedRestaurantId)}/delivery-window`,
                             { PreferredDeliveryWindow: w }
                           ),
-                        { inlineErrorKey: "updateRestaurant" }
+                        { inlineErrorKey: "updateRestaurant", sqlScope: "updateRestaurant" }
                       );
                     }}
                   >
@@ -966,9 +1029,12 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Update Trip Distance</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <CardDescription>
                     Pick a trip row, edit total distance (kilometres, zero or more), then submit.
-                  </p>
+                  </CardDescription>
+                  <CardAction>
+                    <SqlPeekButton sql={sectionSql.updateTrip ?? null} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {updateTablesLoading ? (
@@ -1029,7 +1095,7 @@ export default function CrudPage() {
                           putJson(`/api/trips/${encodeURIComponent(selectedTripId)}/route`, {
                             TotalDistanceKM: dist,
                           }),
-                        { inlineErrorKey: "updateTrip" }
+                        { inlineErrorKey: "updateTrip", sqlScope: "updateTrip" }
                       );
                     }}
                   >
@@ -1066,10 +1132,13 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Delete Order</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <CardDescription>
                     Choose an order, confirm by typing its Order ID, then delete. This cannot be
                     undone.
-                  </p>
+                  </CardDescription>
+                  <CardAction>
+                    <SqlPeekButton sql={deleteOrderSqlPanel} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {deleteListsLoading ? (
@@ -1141,7 +1210,7 @@ export default function CrudPage() {
                       }
                       run(
                         () => del(`/api/orders/${encodeURIComponent(selectedOrderId)}`),
-                        { inlineErrorKey: "deleteOrder" }
+                        { inlineErrorKey: "deleteOrder", sqlScope: "deleteOrder" }
                       );
                     }}
                   >
@@ -1180,11 +1249,14 @@ export default function CrudPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Remove Harvest Batch</CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <CardDescription>
                     The server only deletes batches where{" "}
                     <code className="rounded bg-muted px-1 py-0.5 text-xs">IsAvailable = 1</code>.
                     The picker is limited to those rows so an invalid ID is unlikely.
-                  </p>
+                  </CardDescription>
+                  <CardAction>
+                    <SqlPeekButton sql={sectionSql.deleteBatch ?? null} />
+                  </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {deleteListsLoading ? (
@@ -1256,7 +1328,7 @@ export default function CrudPage() {
                       }
                       run(
                         () => del(`/api/harvest-batches/${encodeURIComponent(selectedBatchId)}`),
-                        { inlineErrorKey: "deleteBatch" }
+                        { inlineErrorKey: "deleteBatch", sqlScope: "deleteBatch" }
                       );
                     }}
                   >
@@ -1300,13 +1372,16 @@ export default function CrudPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Lookup data</CardTitle>
-                <p className="text-sm text-muted-foreground">
+                <CardDescription>
                   Read-only lists from{" "}
                   <code className="rounded bg-muted px-1 py-0.5 text-xs">
                     GET {readLookupMeta.path}
                   </code>
                   . {readLookupMeta.description}
-                </p>
+                </CardDescription>
+                <CardAction>
+                  <SqlPeekButton sql={sqlExecutedText(readRaw)} />
+                </CardAction>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1490,12 +1565,20 @@ export default function CrudPage() {
                   </div>
                 ) : null}
 
-                <JsonPanel
-                  value={readRaw}
-                  open={readJsonOpen}
-                  onOpenChange={setReadJsonOpen}
-                  disabled={!readRaw && !readError}
-                />
+                <div className="space-y-3">
+                  <SqlPanel
+                    sqlText={sqlExecutedText(readRaw)}
+                    open={readSqlOpen}
+                    onOpenChange={setReadSqlOpen}
+                    disabled={!readRaw && !readError}
+                  />
+                  <JsonPanel
+                    value={readRaw}
+                    open={readJsonOpen}
+                    onOpenChange={setReadJsonOpen}
+                    disabled={!readRaw && !readError}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1505,6 +1588,14 @@ export default function CrudPage() {
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Response</CardTitle>
+              <CardAction>
+                <SqlPeekButton
+                  sql={
+                    sqlExecutedText(result) ??
+                    sqlExecutedText((error as Error & { data?: unknown }).data)
+                  }
+                />
+              </CardAction>
             </CardHeader>
             <CardContent>
               {error ? (

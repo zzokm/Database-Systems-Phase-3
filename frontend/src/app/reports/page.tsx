@@ -13,12 +13,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SqlPeekButton } from "@/components/sql-peek-button";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { DynamicDataTable } from "@/components/dynamic-data-table";
+import { SqlPanel } from "@/components/sql-panel";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
+import { sqlExecutedText } from "@/lib/sql-executed";
 import {
   applyTableView,
   columnKeys,
@@ -151,7 +154,11 @@ export default function ReportsPage() {
   const [error, setError] = React.useState<unknown>(null);
   const [runningId, setRunningId] = React.useState<string | null>(null);
   const [jsonOpen, setJsonOpen] = React.useState(false);
+  const [sqlOpen, setSqlOpen] = React.useState(false);
   const [lastRunId, setLastRunId] = React.useState<string | null>(null);
+  const [reportSqlById, setReportSqlById] = React.useState<Record<string, string | null>>(
+    {}
+  );
 
   const [sortColumn, setSortColumn] = React.useState("");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
@@ -182,6 +189,7 @@ export default function ReportsPage() {
     setRaw(null);
     setError(null);
     setJsonOpen(false);
+    setSqlOpen(false);
     try {
       const r = await getReport(reportId);
       const nextRows = r.rows;
@@ -193,11 +201,19 @@ export default function ReportsPage() {
       setSliceCount(10);
       setRaw(r.data);
       setLastRunId(reportId);
+      setReportSqlById((prev) => ({
+        ...prev,
+        [reportId]: sqlExecutedText(r.data),
+      }));
     } catch (e) {
       setError(e);
       const ex = e as Error & { status?: number; data?: unknown };
       setRaw(ex.data ?? { message: ex.message, status: ex.status });
       setLastRunId(null);
+      setReportSqlById((prev) => ({
+        ...prev,
+        [reportId]: sqlExecutedText(ex.data),
+      }));
     } finally {
       setRunningId(null);
     }
@@ -222,9 +238,9 @@ export default function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Run a report</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardDescription>
               Click any card to run that query in one step.
-            </p>
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -235,13 +251,16 @@ export default function ReportsPage() {
                   <button
                     key={r.id}
                     type="button"
-                    disabled={busy}
-                    onClick={() => void run(r.id)}
+                    aria-disabled={busy}
+                    onClick={() => {
+                      if (busy) return;
+                      void run(r.id);
+                    }}
                     className={cn(
-                      "flex h-full min-h-[8.5rem] flex-col gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors",
+                      "relative flex h-full min-h-[8.5rem] flex-col gap-3 rounded-xl border bg-card p-4 pt-11 text-left shadow-sm transition-colors",
                       "hover:border-foreground/20 hover:bg-muted/30",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      "disabled:pointer-events-none disabled:opacity-60",
+                      busy && "cursor-wait opacity-60",
                       isRunning &&
                         "border-primary bg-primary/5 ring-2 ring-primary/30",
                       isLastRun &&
@@ -249,6 +268,13 @@ export default function ReportsPage() {
                         "border-primary/50 bg-primary/[0.03] ring-1 ring-primary/20"
                     )}
                   >
+                    <div
+                      className="absolute right-2 top-2 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
+                    >
+                      <SqlPeekButton sql={reportSqlById[r.id] ?? null} />
+                    </div>
                     <div className="flex gap-3">
                       <div
                         className={cn(
@@ -299,17 +325,20 @@ export default function ReportsPage() {
         <Card className="mt-6">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Results</CardTitle>
-            {lastRun ? (
-              <p className="text-sm text-muted-foreground">
-                Query {lastRun.queryNumber}: {lastRun.title}
-              </p>
-            ) : error ? (
-              <p className="text-sm text-destructive">Last request failed</p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Click a report card above to populate this panel.
-              </p>
-            )}
+            <CardDescription
+              className={
+                error && !lastRun ? "text-destructive" : undefined
+              }
+            >
+              {lastRun
+                ? `Query ${lastRun.queryNumber}: ${lastRun.title}`
+                : error
+                  ? "Last request failed"
+                  : "Click a report card above to populate this panel."}
+            </CardDescription>
+            <CardAction>
+              <SqlPeekButton sql={sqlExecutedText(raw)} />
+            </CardAction>
           </CardHeader>
           <CardContent className="space-y-4">
             {error ? (
@@ -318,7 +347,8 @@ export default function ReportsPage() {
                   {(error as Error)?.message ?? "Request failed"}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Expand raw JSON below for the error payload returned by the API.
+                  Expand raw SQL or raw JSON below for the error payload returned by
+                  the API.
                 </p>
               </div>
             ) : rows.length === 0 ? (
@@ -451,27 +481,35 @@ export default function ReportsPage() {
               </div>
             )}
 
-            <div className="rounded-lg border border-border/80 bg-muted/20">
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-10 w-full justify-center gap-2 rounded-none rounded-t-lg border-b border-border/60 text-muted-foreground hover:text-foreground"
-                onClick={() => setJsonOpen((o) => !o)}
+            <div className="space-y-3">
+              <SqlPanel
+                sqlText={sqlExecutedText(raw)}
+                open={sqlOpen}
+                onOpenChange={setSqlOpen}
                 disabled={!raw && !error}
-              >
-                <ChevronDown
-                  className={cn(
-                    "size-4 transition-transform duration-200",
-                    jsonOpen && "rotate-180"
-                  )}
-                />
-                {jsonOpen ? "Hide raw JSON" : "Show raw JSON"}
-              </Button>
-              {jsonOpen ? (
-                <div className="p-3 pt-2">
-                  <JsonBox value={raw} className="border-0 bg-transparent" />
-                </div>
-              ) : null}
+              />
+              <div className="rounded-lg border border-border/80 bg-muted/20">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-10 w-full justify-center gap-2 rounded-none rounded-t-lg border-b border-border/60 text-muted-foreground hover:text-foreground"
+                  onClick={() => setJsonOpen((o) => !o)}
+                  disabled={!raw && !error}
+                >
+                  <ChevronDown
+                    className={cn(
+                      "size-4 transition-transform duration-200",
+                      jsonOpen && "rotate-180"
+                    )}
+                  />
+                  {jsonOpen ? "Hide raw JSON" : "Show raw JSON"}
+                </Button>
+                {jsonOpen ? (
+                  <div className="p-3 pt-2">
+                    <JsonBox value={raw} className="border-0 bg-transparent" />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </CardContent>
         </Card>
