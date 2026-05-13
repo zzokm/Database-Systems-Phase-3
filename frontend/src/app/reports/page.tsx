@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { DynamicDataTable } from "@/components/dynamic-data-table";
 import { SqlPanel } from "@/components/sql-panel";
 import { getPublicApiBaseUrl } from "@/lib/api-base";
-import { sqlExecutedText } from "@/lib/sql-executed";
+import { sqlExecutedStatements } from "@/lib/sql-executed";
 import {
   applyTableView,
   columnKeys,
@@ -319,7 +319,7 @@ export default function ReportsPage() {
                   : "Click a report card above to populate this panel."}
             </CardDescription>
             <CardAction>
-              <SqlPeekButton sql={sqlExecutedText(raw)} />
+              <SqlPeekButton statements={sqlExecutedStatements(raw) ?? undefined} />
             </CardAction>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -465,7 +465,7 @@ export default function ReportsPage() {
 
             <div className="space-y-3">
               <SqlPanel
-                sqlText={sqlExecutedText(raw)}
+                statements={sqlExecutedStatements(raw) ?? undefined}
                 open={sqlOpen}
                 onOpenChange={setSqlOpen}
                 disabled={!raw && !error}

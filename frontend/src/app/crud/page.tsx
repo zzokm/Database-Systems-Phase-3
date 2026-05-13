@@ -36,7 +36,7 @@ import {
   type SliceMode,
 } from "@/lib/table-view";
 import { SqlPanel } from "@/components/sql-panel";
-import { sqlExecutedText } from "@/lib/sql-executed";
+import { sqlExecutedStatements } from "@/lib/sql-executed";
 import { cn } from "@/lib/utils";
 
 const FETCH_TIMEOUT_MS = 30_000;
@@ -313,8 +313,8 @@ export default function CrudPage() {
   const [result, setResult] = React.useState<unknown>(null);
   const [error, setError] = React.useState<unknown>(null);
   const [busy, setBusy] = React.useState(false);
-  const [sectionSql, setSectionSql] = React.useState<
-    Partial<Record<SqlScope, string | null>>
+  const [sectionStatements, setSectionStatements] = React.useState<
+    Partial<Record<SqlScope, string[] | null>>
   >({});
   const [orderPreflightSql, setOrderPreflightSql] = React.useState<string | null>(
     null
@@ -462,12 +462,12 @@ export default function CrudPage() {
         if (cancelled) return;
         if (!res.ok) {
           setOrderDetail(null);
-          setOrderPreflightSql(sqlExecutedText(data));
+          setOrderPreflightSql(sqlExecutedStatements(data)?.[0] ?? null);
           return;
         }
         const row = (data as { row?: Row } | null)?.row;
         setOrderDetail(row && typeof row === "object" ? row : null);
-        setOrderPreflightSql(sqlExecutedText(data));
+        setOrderPreflightSql(sqlExecutedStatements(data)?.[0] ?? null);
       } catch {
         if (!cancelled) {
           setOrderDetail(null);
@@ -583,14 +583,13 @@ export default function CrudPage() {
 
   const readTableColumns = React.useMemo(() => columnKeys(readRows), [readRows]);
 
-  const deleteOrderSqlPanel = React.useMemo(() => {
-    const parts = [orderPreflightSql, sectionSql.deleteOrder].filter(
-      (s): s is string => Boolean(s && String(s).trim())
-    );
-    return parts.length
-      ? parts.join("\n\n/* --- next request --- */\n\n")
-      : null;
-  }, [orderPreflightSql, sectionSql.deleteOrder]);
+  const deleteOrderPeekStatements = React.useMemo(() => {
+    const parts: string[] = [];
+    if (orderPreflightSql?.trim()) parts.push(orderPreflightSql.trim());
+    const dels = sectionStatements.deleteOrder;
+    if (dels?.length) parts.push(...dels);
+    return parts.length > 0 ? parts : null;
+  }, [orderPreflightSql, sectionStatements.deleteOrder]);
 
   async function run<T>(
     fn: () => Promise<T>,
@@ -611,16 +610,16 @@ export default function CrudPage() {
     try {
       const data = await fn();
       setResult(data);
-      const t = sqlExecutedText(data);
-      if (sqlScope && t) {
-        setSectionSql((prev) => ({ ...prev, [sqlScope]: t }));
+      const st = sqlExecutedStatements(data);
+      if (sqlScope && st?.length) {
+        setSectionStatements((prev) => ({ ...prev, [sqlScope]: st }));
       }
     } catch (e) {
       setError(e);
       const ex = e as Error & { data?: unknown };
-      const t = sqlExecutedText(ex.data);
-      if (sqlScope && t) {
-        setSectionSql((prev) => ({ ...prev, [sqlScope]: t }));
+      const st = sqlExecutedStatements(ex.data);
+      if (sqlScope && st?.length) {
+        setSectionStatements((prev) => ({ ...prev, [sqlScope]: st }));
       }
       if (inlineKey) {
         setInlineErrors((prev) => ({
@@ -664,7 +663,7 @@ export default function CrudPage() {
                 <CardHeader>
                   <CardTitle>Add Harvest Batch</CardTitle>
                   <CardAction>
-                    <SqlPeekButton sql={sectionSql.insertHarvest ?? null} />
+                    <SqlPeekButton statements={sectionStatements.insertHarvest ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent>
@@ -828,7 +827,7 @@ export default function CrudPage() {
                 <CardHeader>
                   <CardTitle>Add Driver</CardTitle>
                   <CardAction>
-                    <SqlPeekButton sql={sectionSql.insertDriver ?? null} />
+                    <SqlPeekButton statements={sectionStatements.insertDriver ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent>
@@ -930,7 +929,7 @@ export default function CrudPage() {
                     .
                   </CardDescription>
                   <CardAction>
-                    <SqlPeekButton sql={sectionSql.updateRestaurant ?? null} />
+                    <SqlPeekButton statements={sectionStatements.updateRestaurant ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1033,7 +1032,7 @@ export default function CrudPage() {
                     Pick a trip row, edit total distance (kilometres, zero or more), then submit.
                   </CardDescription>
                   <CardAction>
-                    <SqlPeekButton sql={sectionSql.updateTrip ?? null} />
+                    <SqlPeekButton statements={sectionStatements.updateTrip ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1137,7 +1136,7 @@ export default function CrudPage() {
                     undone.
                   </CardDescription>
                   <CardAction>
-                    <SqlPeekButton sql={deleteOrderSqlPanel} />
+                    <SqlPeekButton statements={deleteOrderPeekStatements ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1255,7 +1254,7 @@ export default function CrudPage() {
                     The picker is limited to those rows so an invalid ID is unlikely.
                   </CardDescription>
                   <CardAction>
-                    <SqlPeekButton sql={sectionSql.deleteBatch ?? null} />
+                    <SqlPeekButton statements={sectionStatements.deleteBatch ?? undefined} />
                   </CardAction>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1380,7 +1379,7 @@ export default function CrudPage() {
                   . {readLookupMeta.description}
                 </CardDescription>
                 <CardAction>
-                  <SqlPeekButton sql={sqlExecutedText(readRaw)} />
+                  <SqlPeekButton statements={sqlExecutedStatements(readRaw) ?? undefined} />
                 </CardAction>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1567,7 +1566,7 @@ export default function CrudPage() {
 
                 <div className="space-y-3">
                   <SqlPanel
-                    sqlText={sqlExecutedText(readRaw)}
+                    statements={sqlExecutedStatements(readRaw) ?? undefined}
                     open={readSqlOpen}
                     onOpenChange={setReadSqlOpen}
                     disabled={!readRaw && !readError}
@@ -1590,9 +1589,12 @@ export default function CrudPage() {
               <CardTitle>Response</CardTitle>
               <CardAction>
                 <SqlPeekButton
-                  sql={
-                    sqlExecutedText(result) ??
-                    sqlExecutedText((error as Error & { data?: unknown }).data)
+                  statements={
+                    error
+                      ? sqlExecutedStatements(
+                          (error as Error & { data?: unknown }).data
+                        ) ?? undefined
+                      : sqlExecutedStatements(result) ?? undefined
                   }
                 />
               </CardAction>
