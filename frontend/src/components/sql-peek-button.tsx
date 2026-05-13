@@ -33,12 +33,6 @@ function useStatementBlocks(
 export function SqlPeekButton({ statements, sql, className }: SqlPeekButtonProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
   const blocks = useStatementBlocks(statements, sql);
-  const showPreflightHint = React.useMemo(
-    () =>
-      blocks.length >= 2 &&
-      blocks.some((b) => /SELECT\s+1\s+AS\s+x\b/i.test(b)),
-    [blocks]
-  );
 
   const formattedBlocks = React.useMemo(
     () => blocks.map((b) => formatSqlForDisplay(b) || b),
@@ -98,19 +92,6 @@ export function SqlPeekButton({ statements, sql, className }: SqlPeekButtonProps
                   <HighlightedSql sql={text} />
                 </div>
               ))}
-              {showPreflightHint ? (
-                <p className="text-xs leading-snug text-muted-foreground">
-                  <span className="font-medium text-foreground">About </span>
-                  <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.65rem]">
-                    SELECT 1 AS x
-                  </code>
-                  <span className="font-medium text-foreground"> checks: </span>
-                  the API only needs to know whether a matching row exists. The literal{" "}
-                  <code className="rounded bg-muted px-0.5 font-mono text-[0.65rem]">1</code> is a
-                  dummy value; <code className="rounded bg-muted px-0.5 font-mono text-[0.65rem]">x</code>{" "}
-                  is just the column alias. That is not your quantity, farm count, or crop weight.
-                </p>
-              ) : null}
             </div>
           ) : (
             <p className="text-sm leading-relaxed text-muted-foreground">
