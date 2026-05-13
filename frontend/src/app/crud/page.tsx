@@ -266,6 +266,7 @@ export default function CrudPage() {
   const [farmsInsert, setFarmsInsert] = React.useState<Row[]>([]);
   const [cropsInsert, setCropsInsert] = React.useState<Row[]>([]);
   const [insertLookupsLoading, setInsertLookupsLoading] = React.useState(false);
+  const [insertLookupsError, setInsertLookupsError] = React.useState<string | null>(null);
   const [harvestFarmId, setHarvestFarmId] = React.useState("");
   const [harvestCropTypeId, setHarvestCropTypeId] = React.useState("");
   const [harvestIsAvailable, setHarvestIsAvailable] = React.useState("true");
@@ -339,6 +340,7 @@ export default function CrudPage() {
     let cancelled = false;
     (async () => {
       setInsertLookupsLoading(true);
+      setInsertLookupsError(null);
       try {
         const [fa, cr] = await Promise.all([
           getLookup("/api/farms"),
@@ -347,10 +349,11 @@ export default function CrudPage() {
         if (cancelled) return;
         setFarmsInsert(fa.rows);
         setCropsInsert(cr.rows);
-      } catch {
+      } catch (e) {
         if (!cancelled) {
           setFarmsInsert([]);
           setCropsInsert([]);
+          setInsertLookupsError(extractApiMessage(e));
         }
       } finally {
         if (!cancelled) setInsertLookupsLoading(false);
@@ -665,6 +668,19 @@ export default function CrudPage() {
                         Loading farms and crop types…
                       </p>
                     ) : null}
+                    {insertLookupsError ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {insertLookupsError}
+                      </p>
+                    ) : null}
+                    {!insertLookupsLoading &&
+                    !insertLookupsError &&
+                    (farmsInsert.length === 0 || cropsInsert.length === 0) ? (
+                      <p className="text-xs text-muted-foreground">
+                        Farm or crop list is empty. On a new database, run db/schema.sql then
+                        db/seed.sql against FarmDB.
+                      </p>
+                    ) : null}
                     <div className="grid gap-1.5">
                       <Label htmlFor="farm_id">Farm</Label>
                       <CrudSelectDropdown
@@ -673,7 +689,7 @@ export default function CrudPage() {
                         onValueChange={setHarvestFarmId}
                         options={farmInsertOptions}
                         placeholder="Choose a farm…"
-                        disabled={busy || insertLookupsLoading || farmsInsert.length === 0}
+                        disabled={busy || insertLookupsLoading}
                         emptyLabel="No farms loaded"
                       />
                     </div>
@@ -685,16 +701,13 @@ export default function CrudPage() {
                         onValueChange={setHarvestCropTypeId}
                         options={cropInsertOptions}
                         placeholder="Choose a crop type…"
-                        disabled={busy || insertLookupsLoading || cropsInsert.length === 0}
+                        disabled={busy || insertLookupsLoading}
                         emptyLabel="No crop types loaded"
                       />
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="harvest_date">Harvest Date</Label>
                       <Input id="harvest_date" name="harvest_date" type="date" required />
-                      <p className="text-xs text-muted-foreground">
-                        Use a real calendar date; the API rejects impossible future dates.
-                      </p>
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="available_quantity_kg">Available Quantity (KG)</Label>
@@ -825,10 +838,6 @@ export default function CrudPage() {
                         required
                         maxLength={20}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Required for this API. Duplicate phone or same first and last name as an
-                        existing driver returns HTTP 409.
-                      </p>
                     </div>
                     {inlineErrors.driver ? (
                       <p className="text-sm text-destructive" role="alert">
