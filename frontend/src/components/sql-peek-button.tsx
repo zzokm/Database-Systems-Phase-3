@@ -4,6 +4,7 @@ import * as React from "react";
 import { Code2 } from "lucide-react";
 
 import { HighlightedSql } from "@/lib/sql-highlight";
+import { formatSqlForDisplay } from "@/lib/format-sql-display";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,11 @@ type SqlPeekButtonProps = {
 export function SqlPeekButton({ sql, className }: SqlPeekButtonProps) {
   const ref = React.useRef<HTMLDialogElement>(null);
   const trimmed = sql?.trim() ?? "";
+  const formattedSql = React.useMemo(() => {
+    if (!trimmed) return "";
+    const out = formatSqlForDisplay(trimmed);
+    return out || trimmed;
+  }, [trimmed]);
 
   return (
     <>
@@ -56,8 +62,8 @@ export function SqlPeekButton({ sql, className }: SqlPeekButtonProps) {
         </div>
         <div className="min-h-0 flex-1 overflow-auto p-4">
           {trimmed ? (
-            <div className="rounded-lg border border-border/80 bg-muted/20 p-3">
-              <HighlightedSql sql={trimmed} />
+            <div className="overflow-x-auto rounded-lg border border-border/80 bg-muted/20 p-3">
+              <HighlightedSql sql={formattedSql} />
             </div>
           ) : (
             <p className="text-sm leading-relaxed text-muted-foreground">

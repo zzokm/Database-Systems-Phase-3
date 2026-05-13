@@ -9,11 +9,18 @@ const KEYWORDS = new Set(
     "DISTINCT", "TOP", "UNION", "ALL", "INSERT", "INTO", "UPDATE", "DELETE", "SET",
     "VALUES", "NULL", "IS", "LIKE", "BETWEEN", "EXISTS", "CASE", "WHEN", "THEN",
     "ELSE", "END", "COUNT", "SUM", "MIN", "MAX", "AVG", "OVER", "ASC", "DESC",
-    "WITH", "USE", "GO", "CAST", "DATEADD", "DATEDIFF", "GETDATE", "YEAR", "MONTH",
-    "DAY", "PARTITION", "FETCH", "NEXT", "ROWS", "ONLY", "OFFSET", "DECLARE", "IF",
-    "BEGIN", "RETURN", "EXEC", "EXECUTE", "TABLE", "VIEW", "INDEX", "CONSTRAINT",
-    "DEFAULT", "PRIMARY", "KEY", "FOREIGN", "REFERENCES", "CREATE", "ALTER", "DROP",
-    "TRUNCATE", "MERGE", "APPLY", "PIVOT", "UNPIVOT", "SOME", "ANY",
+    "WITH", "USE", "GO", "CAST", "CONVERT", "TRY_CAST", "DATEADD", "DATEDIFF",
+    "GETDATE", "YEAR", "MONTH", "DAY", "PARTITION", "FETCH", "NEXT", "ROWS", "ONLY",
+    "OFFSET", "DECLARE", "IF", "BEGIN", "RETURN", "EXEC", "EXECUTE", "TABLE", "VIEW",
+    "INDEX", "CONSTRAINT", "DEFAULT", "PRIMARY", "KEY", "FOREIGN", "REFERENCES",
+    "CREATE", "ALTER", "DROP", "TRUNCATE", "MERGE", "APPLY", "PIVOT", "UNPIVOT",
+    "SOME", "ANY", "OUTPUT", "INSERTED", "DELETED", "ROW_NUMBER", "RANK", "DENSE_RANK",
+    "NTILE", "LEAD", "LAG", "FIRST_VALUE", "LAST_VALUE", "BIT", "INT", "BIGINT",
+    "SMALLINT", "TINYINT", "DECIMAL", "NUMERIC", "FLOAT", "REAL", "MONEY", "SMALLMONEY",
+    "CHAR", "NCHAR", "VARCHAR", "NVARCHAR", "TEXT", "NTEXT", "DATE", "TIME", "DATETIME",
+    "DATETIME2", "SMALLDATETIME", "DATETIMEOFFSET", "UNIQUEIDENTIFIER", "VARBINARY",
+    "BINARY", "IMAGE", "XML", "CURSOR", "ROWVERSION", "TIMESTAMP", "HOLDLOCK", "NOLOCK",
+    "READUNCOMMITTED", "UPDLOCK", "SERIALIZABLE", "READCOMMITTED", "REPEATABLEREAD",
   ].map((s) => s.toUpperCase())
 );
 
@@ -148,7 +155,7 @@ function lexSql(sql: string): Tok[] {
 export function HighlightedSql({ sql }: { sql: string }) {
   const tokens = React.useMemo(() => lexSql(sql), [sql]);
   return (
-    <code className="block font-mono text-[0.8125rem] leading-relaxed">
+    <code className="block whitespace-pre-wrap break-words font-mono text-[0.8125rem] leading-relaxed [tab-size:2]">
       {tokens.map((t, idx) => (
         <span key={idx} className={KIND_CLASS[t.kind] ?? ""}>
           {t.text}

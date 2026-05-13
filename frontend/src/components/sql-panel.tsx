@@ -1,7 +1,10 @@
 "use client";
 
+import * as React from "react";
 import { ChevronDown } from "lucide-react";
 
+import { HighlightedSql } from "@/lib/sql-highlight";
+import { formatSqlForDisplay } from "@/lib/format-sql-display";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +19,10 @@ export function SqlPanel({
   onOpenChange: (open: boolean) => void;
   disabled?: boolean;
 }) {
+  const formatted = React.useMemo(
+    () => (sqlText ? formatSqlForDisplay(sqlText) : ""),
+    [sqlText]
+  );
   if (!sqlText) return null;
   return (
     <div className="rounded-lg border border-emerald-600/25 bg-emerald-950/[0.07] dark:bg-emerald-950/20">
@@ -36,9 +43,9 @@ export function SqlPanel({
       </Button>
       {open ? (
         <div className="p-3 pt-2">
-          <pre className="max-h-96 overflow-auto rounded-md border border-emerald-600/20 bg-background/80 p-3 text-xs leading-relaxed font-mono whitespace-pre-wrap">
-            {sqlText}
-          </pre>
+          <div className="max-h-96 overflow-auto overflow-x-auto rounded-md border border-emerald-600/20 bg-background/80 p-3">
+            <HighlightedSql sql={formatted} />
+          </div>
         </div>
       ) : null}
     </div>
@@ -46,10 +53,11 @@ export function SqlPanel({
 }
 
 export function SqlBox({ sql }: { sql: string | null }) {
+  const formatted = React.useMemo(() => (sql ? formatSqlForDisplay(sql) : ""), [sql]);
   if (!sql) return null;
   return (
-    <pre className="mb-3 max-h-96 overflow-auto rounded-lg border border-emerald-600/25 bg-emerald-950/[0.07] p-3 text-xs leading-relaxed font-mono whitespace-pre-wrap dark:bg-emerald-950/20">
-      {sql}
-    </pre>
+    <div className="mb-3 max-h-96 overflow-auto overflow-x-auto rounded-lg border border-emerald-600/25 bg-emerald-950/[0.07] p-3 dark:bg-emerald-950/20">
+      <HighlightedSql sql={formatted} />
+    </div>
   );
 }

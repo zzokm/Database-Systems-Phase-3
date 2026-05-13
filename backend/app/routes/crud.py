@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from flask import Blueprint, current_app, jsonify, request
 
 from app.db.connection import execute_insert_returning_int, execute_select, execute_write
+from app.db.sql_preview import sql_for_display
 from app.db.sql_files import SQL
 
 bp = Blueprint("crud", __name__, url_prefix="/api")
@@ -56,7 +57,7 @@ def get_farms():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["farms"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/restaurants")
@@ -64,7 +65,7 @@ def get_restaurants():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["restaurants"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.get("/trips")
@@ -72,7 +73,7 @@ def get_trips():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["trips"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.get("/orders")
@@ -80,7 +81,7 @@ def get_orders_list():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["orders_list"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.get("/orders/<order_id>")
@@ -93,9 +94,12 @@ def get_order_detail(order_id: str):
             f"No order found with ID {order_id}.",
             code="NOT_FOUND",
             http=404,
-            sql_executed=[sql],
+            sql_executed=[sql_for_display(sql, [order_id])],
         )
-    return _ok({"status": "ok", "row": rows[0]}, sql_executed=[sql])
+    return _ok(
+        {"status": "ok", "row": rows[0]},
+        sql_executed=[sql_for_display(sql, [order_id])],
+    )
 
 
 @bp.get("/harvest-batches")
@@ -107,7 +111,7 @@ def get_harvest_batches_list():
         sql = f"{sql}\nWHERE hb.IsAvailable = 1"
     sql = f"{sql}\nORDER BY hb.HarvestDate DESC, hb.BatchID DESC"
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/drivers")
@@ -115,7 +119,7 @@ def get_drivers_list():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["drivers"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/crop-types")
@@ -123,7 +127,7 @@ def get_crop_types():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.read["crop_types"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 # --- Report endpoints (Members 3 & 4): analytical inquiries ---
@@ -134,7 +138,7 @@ def get_report_top_crop():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_123["top_crop"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.get("/reports/inactive-farms")
@@ -142,7 +146,7 @@ def get_report_inactive_farms():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_123["inactive_farms"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.get("/reports/top-driver")
@@ -150,7 +154,7 @@ def get_report_top_driver():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_123["top_driver"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
 
 
 @bp.post("/harvest-batches")
@@ -217,7 +221,7 @@ def post_harvest_batch():
             f"No farm exists with FarmID {farm_id}.",
             field="FarmID",
             code="UNKNOWN_FARM",
-            sql_executed=[sql_farm],
+            sql_executed=[sql_for_display(sql_farm, [farm_id])],
         )
 
     sql_crop = SQL.read["crop_exists"]
@@ -227,28 +231,36 @@ def post_harvest_batch():
             f"No crop type exists with CropTypeID {crop_type_id}.",
             field="CropTypeID",
             code="UNKNOWN_CROP_TYPE",
-            sql_executed=[sql_farm, sql_crop],
+            sql_executed=[
+                sql_for_display(sql_farm, [farm_id]),
+                sql_for_display(sql_crop, [crop_type_id]),
+            ],
         )
 
     sql = SQL.insert["insert_harvest_batch"]
+    insert_params = [
+        farm_id,
+        crop_type_id,
+        harvest_date_raw[:10],
+        q,
+        p,
+        1 if is_available else 0,
+    ]
     try:
         result = execute_insert_returning_int(
             cfg,
             sql,
-            [
-                farm_id,
-                crop_type_id,
-                harvest_date_raw[:10],
-                q,
-                p,
-                1 if is_available else 0,
-            ],
+            insert_params,
         )
     except Exception as ex:  # noqa: BLE001
         return _error(
             str(ex),
             code="DATABASE_ERROR",
-            sql_executed=[sql_farm, sql_crop, sql],
+            sql_executed=[
+                sql_for_display(sql_farm, [farm_id]),
+                sql_for_display(sql_crop, [crop_type_id]),
+                sql_for_display(sql, insert_params),
+            ],
         )
 
     bid = result.get("inserted_id")
@@ -260,7 +272,11 @@ def post_harvest_batch():
             "BatchID": bid,
         },
         201,
-        sql_executed=[sql_farm, sql_crop, sql],
+        sql_executed=[
+            sql_for_display(sql_farm, [farm_id]),
+            sql_for_display(sql_crop, [crop_type_id]),
+            sql_for_display(sql, insert_params),
+        ],
     )
 
 
@@ -305,17 +321,21 @@ def post_driver():
             "A driver with this phone number or the same first and last name already exists.",
             code="DUPLICATE_DRIVER",
             http=409,
-            sql_executed=[sql_dup],
+            sql_executed=[sql_for_display(sql_dup, [phone, first_name, last_name])],
         )
 
     sql = SQL.insert["insert_driver"]
+    driver_params = [first_name, last_name, phone]
     try:
-        result = execute_insert_returning_int(cfg, sql, [first_name, last_name, phone])
+        result = execute_insert_returning_int(cfg, sql, driver_params)
     except Exception as ex:  # noqa: BLE001
         return _error(
             str(ex),
             code="DATABASE_ERROR",
-            sql_executed=[sql_dup, sql],
+            sql_executed=[
+                sql_for_display(sql_dup, [phone, first_name, last_name]),
+                sql_for_display(sql, driver_params),
+            ],
         )
 
     return _ok(
@@ -326,7 +346,10 @@ def post_driver():
             "DriverID": result.get("inserted_id"),
         },
         201,
-        sql_executed=[sql_dup, sql],
+        sql_executed=[
+            sql_for_display(sql_dup, [phone, first_name, last_name]),
+            sql_for_display(sql, driver_params),
+        ],
     )
  
 #FIRST UPDATE statement: update the PreferredDeliveryWindow for a specific restaurant in the Restaurants table
@@ -344,7 +367,8 @@ def put_restaurant_window(restaurant_id: str):
 
     sql = SQL.update["update_restaurant_delivery_window"]
     cfg = current_app.config["APP_CONFIG"]
-    result = execute_write(cfg, sql, [delivery_window, restaurant_id])
+    rw_params = [delivery_window, restaurant_id]
+    result = execute_write(cfg, sql, rw_params)
 
     if result["rows_affected"] == 0:
         return _error(
@@ -352,7 +376,7 @@ def put_restaurant_window(restaurant_id: str):
             code="NOT_FOUND",
             field="RestaurantID",
             http=404,
-            sql_executed=[sql],
+            sql_executed=[sql_for_display(sql, rw_params)],
         )
 
     return _ok(
@@ -361,7 +385,7 @@ def put_restaurant_window(restaurant_id: str):
             "message": f"Delivery window updated for restaurant {restaurant_id}.",
             "rows_affected": result["rows_affected"],
         },
-        sql_executed=[sql],
+        sql_executed=[sql_for_display(sql, rw_params)],
     )
  
 #SECOND UPDATE statement: update the route and TotalDistanceKM for a specific trip in the Trips table
@@ -386,7 +410,8 @@ def put_trip_route(trip_id: str):
     sql = SQL.update["update_trip_distance"]
 
     cfg = current_app.config["APP_CONFIG"]
-    result = execute_write(cfg, sql, [total_distance, trip_id])
+    trip_params = [total_distance, trip_id]
+    result = execute_write(cfg, sql, trip_params)
 
     if result["rows_affected"] == 0:
         return _error(
@@ -394,7 +419,7 @@ def put_trip_route(trip_id: str):
             code="NOT_FOUND",
             field="TripID",
             http=404,
-            sql_executed=[sql],
+            sql_executed=[sql_for_display(sql, trip_params)],
         )
 
     return _ok(
@@ -403,7 +428,7 @@ def put_trip_route(trip_id: str):
             "message": f"Trip {trip_id} distance updated successfully.",
             "rows_affected": result["rows_affected"],
         },
-        sql_executed=[sql],
+        sql_executed=[sql_for_display(sql, trip_params)],
     )
  
 #FIRST DELETE statement: delete a specific order from Orders (TripOrders first; no CASCADE from Orders)
@@ -417,6 +442,7 @@ def delete_order(order_id: str):
 
     sql_order = SQL.delete["delete_order_by_id"]
     result = execute_write(cfg, sql_order, [order_id])
+    oid_param = [order_id]
 
     if result["rows_affected"] == 0:
         return _error(
@@ -424,7 +450,10 @@ def delete_order(order_id: str):
             code="NOT_FOUND",
             field="OrderID",
             http=404,
-            sql_executed=[sql_trip_orders, sql_order],
+            sql_executed=[
+                sql_for_display(sql_trip_orders, oid_param),
+                sql_for_display(sql_order, oid_param),
+            ],
         )
 
     return _ok(
@@ -433,7 +462,10 @@ def delete_order(order_id: str):
             "message": f"Order {order_id} cancelled successfully.",
             "rows_affected": result["rows_affected"],
         },
-        sql_executed=[sql_trip_orders, sql_order],
+        sql_executed=[
+            sql_for_display(sql_trip_orders, oid_param),
+            sql_for_display(sql_order, oid_param),
+        ],
     )
  
  
@@ -445,7 +477,8 @@ def delete_harvest_batch(batch_id: str):
 
     # WHERE has two conditions: BatchID AND IsAvailable check
     sql = SQL.delete["delete_harvest_batch_when_available"]
-    result = execute_write(cfg, sql, [batch_id])
+    batch_param = [batch_id]
+    result = execute_write(cfg, sql, batch_param)
 
     if result["rows_affected"] == 0:
         return _error(
@@ -456,7 +489,7 @@ def delete_harvest_batch(batch_id: str):
             code="NOT_FOUND",
             field="BatchID",
             http=404,
-            sql_executed=[sql],
+            sql_executed=[sql_for_display(sql, batch_param)],
         )
 
     return _ok(
@@ -465,7 +498,7 @@ def delete_harvest_batch(batch_id: str):
             "message": f"Harvest batch {batch_id} removed successfully.",
             "rows_affected": result["rows_affected"],
         },
-        sql_executed=[sql],
+        sql_executed=[sql_for_display(sql, batch_param)],
     )
  
  
@@ -474,7 +507,7 @@ def get_report_inactive_restaurants():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_456["inactive_restaurants"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/reports/batches-by-restaurant")
@@ -482,7 +515,7 @@ def get_report_batches_by_restaurant():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_456["batches_by_restaurant"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/reports/farm-revenue")
@@ -490,7 +523,7 @@ def get_report_farm_revenue():
     cfg = current_app.config["APP_CONFIG"]
     sql = SQL.reports_456["farm_revenue"]
     rows = execute_select(cfg, sql)
-    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql])
+    return _ok({"status": "ok", "rows": rows}, sql_executed=[sql_for_display(sql)])
  
  
 @bp.get("/meta/routes")
