@@ -17,7 +17,7 @@ Flask exposes:
 - **`GET /health`** - liveness (no database).
 - **`GET /ready`** - lightweight `SELECT 1` probe (requires DB reachable).
 - **`GET /api/meta/routes`** - manifest of registered URLs (useful while CRUD/report handlers are still stubs).
-- **`/api/...` CRUD, lookups, and `/api/reports/<slug>` routes** - registered with **HTTP 501** placeholders until Members 2–5 attach SQL.
+- **`/api/...` CRUD, lookups, report slugs, and `GET /api/meta/routes`** - implemented in **`backend/app/routes/crud.py`** (Flask blueprint `crud`).
 
 WSGI entry for containers: `gunicorn --factory app.main:create_app`.
 

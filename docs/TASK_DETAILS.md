@@ -96,7 +96,7 @@ Phase 3/
 │       ├── routes/
 │       │   ├── __init__.py                  # blueprint registration → M2, M5, M3–M4
 │       │   ├── health.py                   # GET /health, /ready → M6
-│       │   └── api_placeholder.py          # stubs today → replace/split → M2, M5, M3–M4
+│       │   └── crud.py                     # CRUD, lookups, reports, GET /api/meta/routes
 │       └── sql/                             # optional: raw .sql snippets per feature
 │           └── README.md
 └── frontend/
@@ -195,7 +195,7 @@ Approve (or revise) Member 5’s **INSERT seed plan**: ensure edge cases (“far
 
 #### Task **M2-1** - INSERT / UPDATE / DELETE API implementations (six endpoints)
 
-Expose **six** Flask routes executing **parameterized raw SQL** (≥2 INSERT, ≥2 UPDATE, ≥2 DELETE on **distinct tables**, `WHERE` on deletes/updates). Today they return **501** from **`api_placeholder`**.
+Expose **six** Flask routes executing **parameterized raw SQL** (≥2 INSERT, ≥2 UPDATE, ≥2 DELETE on **distinct tables**, `WHERE` on deletes/updates). Implement them in **`backend/app/routes/crud.py`** (no separate placeholder blueprint).
 
 Suggested mapping (adapt to schema):
 
@@ -215,9 +215,9 @@ Suggested mapping (adapt to schema):
 
 **Primary files**
 
-- **`backend/app/routes/api_placeholder.py`** (swap implementations or split blueprints registered in **`routes/__init__.py`**).
+- **`backend/app/routes/crud.py`** (and **`routes/__init__.py`** blueprint registration order).
 - **`backend/app/db/connection.py`** (**`execute_write`**, **`execute_select`** reuse).
-- Optional new modules **`backend/app/routes/crud/*.py`** if you refactor out of **`api_placeholder`**.
+- Optional new modules **`backend/app/routes/crud/*.py`** if you split **`crud.py`** for readability.
 
 ---
 
@@ -249,7 +249,7 @@ Ensure request/response shapes match **`frontend/src/app/crud/page.tsx`** form f
 **Deliverables**
 
 1. Example JSON payloads in comments or **`docs/API_CRUD_SAMPLES.md`** (optional).
-2. Updated **`GET /api/meta/routes`** manifest if routes move ( **`api_placeholder`** → **`routes`**).
+2. Updated **`GET /api/meta/routes`** manifest when routes move (keep in **`crud.py`** or the module that owns **`/api/meta/routes`**).
 
 **Primary files**
 
@@ -294,11 +294,11 @@ Expose **three stable** JSON endpoints via Flask (recommended dedicated slugs, e
 **Deliverables**
 
 1. **200** JSON tables/arrays usable by dashboards.
-2. Update **`GET /api/meta/routes`** output to list canonical slugs (modify **`backend/app/routes/api_placeholder.py`** or replacement blueprint **`reports_m3.py`**, etc.).
+2. Update **`GET /api/meta/routes`** output to list canonical slugs (modify **`backend/app/routes/crud.py`** or a dedicated **`reports_*.py`** blueprint if you split routes).
 
 **Primary files**
 
-- **`backend/app/routes/api_placeholder.py`** or new **`reports_*.py`**
+- **`backend/app/routes/crud.py`** or a new **`reports_*.py`** blueprint
 - **`backend/app/routes/__init__.py`** (registration)
 - Possibly **`responses.py`** for paginated/tabular payloads
 
@@ -418,7 +418,7 @@ Expose **`SELECT`** dropdown feeds:
 
 **Primary files**
 
-- **`backend/app/routes/api_placeholder.py`** (add or replace handlers for these paths)  
+- **`backend/app/routes/crud.py`** (add or replace handlers for these paths)  
 - Possibly extract **`backend/app/routes/lookups.py`**
 
 ---
@@ -542,4 +542,4 @@ These are TA-facing minimums (not owned by only one checkbox line in **`WORK_ALL
 
 ## Reference to API route manifest
 
-Whenever routes are added or moved, verify with **`GET /api/meta/routes`** against a running Flask app, and update the **`api_placeholder`** (or successor) route manifest accordingly.
+Whenever routes are added or moved, verify with **`GET /api/meta/routes`** against a running Flask app, and update the route manifest in **`crud.py`** (or wherever **`/api/meta/routes`** is defined) accordingly.
