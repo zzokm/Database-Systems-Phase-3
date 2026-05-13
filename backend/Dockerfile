@@ -2,6 +2,9 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Build with repository root as context (see docker-compose.yml) so this image
+# includes tagged SQL scripts under ./db for app.db.sql_files.
+
 # ODBC dependencies + MS SQL Server ODBC driver (msodbcsql18)
 # Required so `/ready` can actually connect to SQL Server via pyodbc.
 RUN apt-get update \
@@ -18,10 +21,11 @@ RUN apt-get update \
   && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 \
   && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app ./app
+COPY backend/app ./app
+COPY db ./db
 
 EXPOSE 5000
 

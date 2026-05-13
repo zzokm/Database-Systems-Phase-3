@@ -156,9 +156,6 @@ export default function ReportsPage() {
   const [jsonOpen, setJsonOpen] = React.useState(false);
   const [sqlOpen, setSqlOpen] = React.useState(false);
   const [lastRunId, setLastRunId] = React.useState<string | null>(null);
-  const [reportSqlById, setReportSqlById] = React.useState<Record<string, string | null>>(
-    {}
-  );
 
   const [sortColumn, setSortColumn] = React.useState("");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
@@ -201,19 +198,11 @@ export default function ReportsPage() {
       setSliceCount(10);
       setRaw(r.data);
       setLastRunId(reportId);
-      setReportSqlById((prev) => ({
-        ...prev,
-        [reportId]: sqlExecutedText(r.data),
-      }));
     } catch (e) {
       setError(e);
       const ex = e as Error & { status?: number; data?: unknown };
       setRaw(ex.data ?? { message: ex.message, status: ex.status });
       setLastRunId(null);
-      setReportSqlById((prev) => ({
-        ...prev,
-        [reportId]: sqlExecutedText(ex.data),
-      }));
     } finally {
       setRunningId(null);
     }
@@ -257,7 +246,7 @@ export default function ReportsPage() {
                       void run(r.id);
                     }}
                     className={cn(
-                      "relative flex h-full min-h-[8.5rem] flex-col gap-3 rounded-xl border bg-card p-4 pt-11 text-left shadow-sm transition-colors",
+                      "flex h-full min-h-[8.5rem] flex-col gap-3 rounded-xl border bg-card p-4 text-left shadow-sm transition-colors",
                       "hover:border-foreground/20 hover:bg-muted/30",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       busy && "cursor-wait opacity-60",
@@ -268,13 +257,6 @@ export default function ReportsPage() {
                         "border-primary/50 bg-primary/[0.03] ring-1 ring-primary/20"
                     )}
                   >
-                    <div
-                      className="absolute right-2 top-2 z-10"
-                      onClick={(e) => e.stopPropagation()}
-                      onPointerDown={(e) => e.stopPropagation()}
-                    >
-                      <SqlPeekButton sql={reportSqlById[r.id] ?? null} />
-                    </div>
                     <div className="flex gap-3">
                       <div
                         className={cn(

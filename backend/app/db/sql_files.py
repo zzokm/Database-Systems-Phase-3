@@ -2,14 +2,42 @@
 
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 
 def _repo_db_dir() -> Path:
-    # backend/app/db/sql_files.py -> parents[3] = repository root (Phase 3)
-    return Path(__file__).resolve().parents[3] / "db"
+    """Resolve the folder that contains ``READ.sql`` and sibling scripts.
+
+    Layouts supported:
+
+    - Local repo: ``…/<repo>/backend/app/db/sql_files.py`` → ``<repo>/db``.
+    - Docker (WORKDIR ``/app``): ``/app/app/db/sql_files.py`` → ``/app/db``.
+    - Override: set env ``FARM_DB_SQL_DIR`` to the directory that holds the ``*.sql`` files.
+    """
+    here = Path(__file__).resolve()
+    candidates: list[Path] = []
+    override = os.environ.get("FARM_DB_SQL_DIR", "").strip()
+    if override:
+        candidates.append(Path(override))
+    # Monorepo checkout: …/backend/app/db/sql_files.py → …/db
+    if len(here.parents) >= 4:
+        candidates.append(here.parents[3] / "db")
+    # Container: /app/app/db/sql_files.py → /app/db
+    if len(here.parents) >= 3:
+        candidates.append(here.parents[2] / "db")
+
+    for c in candidates:
+        if (c / "READ.sql").is_file():
+            return c
+
+    tried = ", ".join(str(c) for c in candidates) or "(none)"
+    raise FileNotFoundError(
+        "Could not find db/READ.sql for the SQL catalog. "
+        f"Tried: {tried}. Set FARM_DB_SQL_DIR or ensure db/*.sql are deployed beside the app."
+    )
 
 
 def load_tagged_sql_file(path: Path) -> dict[str, str]:
