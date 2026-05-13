@@ -66,8 +66,67 @@ def get_crop_types():
     """
     rows = execute_select(cfg, sql)
     return jsonify({"status": "ok", "rows": rows}), 200
- 
- 
+
+
+# --- Report endpoints (Members 3 & 4): analytical inquiries ---
+
+
+@bp.get("/reports/top-crop")
+def get_report_top_crop():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT TOP 1
+            ct.CropTypeName,
+            COUNT(od.OrderDetailID) AS OrderCount
+        FROM CropTypes ct
+        JOIN HarvestBatches hb ON ct.CropTypeID = hb.CropTypeID
+        JOIN OrderDetails od ON hb.BatchID = od.BatchID
+        GROUP BY ct.CropTypeName
+        ORDER BY OrderCount DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/inactive-farms")
+def get_report_inactive_farms():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT DISTINCT
+            f.FarmID,
+            f.FarmName
+        FROM Farms f
+        LEFT JOIN HarvestBatches hb
+            ON f.FarmID = hb.FarmID
+            AND hb.HarvestDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        LEFT JOIN OrderDetails od
+            ON hb.BatchID = od.BatchID
+        WHERE hb.BatchID IS NULL
+           OR od.OrderDetailID IS NULL
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
+@bp.get("/reports/top-driver")
+def get_report_top_driver():
+    cfg = current_app.config["APP_CONFIG"]
+    sql = """
+        SELECT TOP 1
+            d.DriverID,
+            d.FirstName + ' ' + d.LastName AS DriverName,
+            COUNT(t.TripID) AS TripCount
+        FROM Drivers d
+        JOIN Trips t
+            ON d.DriverID = t.DriverID
+        WHERE t.TripDate >= DATEADD(DAY, -30, CAST(GETDATE() AS DATE))
+        GROUP BY d.DriverID, d.FirstName, d.LastName
+        ORDER BY TripCount DESC
+    """
+    rows = execute_select(cfg, sql)
+    return jsonify({"status": "ok", "rows": rows}), 200
+
+
 #FIRST INSERT statement: insert a new harvest batch into the HarvestBatches table. It expects a JSON body with the req fields after someone sends a POST reuest
 @bp.post("/harvest-batches")
 def post_harvest_batch():
@@ -368,6 +427,9 @@ def api_meta():
                 {"method": "PUT", "pattern": "/api/trips/{id}/route"},
                 {"method": "DELETE", "pattern": "/api/orders/{id}"},
                 {"method": "DELETE", "pattern": "/api/harvest-batches/{id}"},
+                {"method": "GET", "path": "/api/reports/top-crop"},
+                {"method": "GET", "path": "/api/reports/inactive-farms"},
+                {"method": "GET", "path": "/api/reports/top-driver"},
                 {"method": "GET", "path": "/api/reports/inactive-restaurants"},
                 {"method": "GET", "path": "/api/reports/batches-by-restaurant"},
                 {"method": "GET", "path": "/api/reports/farm-revenue"},
